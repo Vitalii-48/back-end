@@ -1,0 +1,12 @@
+# IDE files
+.idea/
+
+# Virtual environment
+.venv/
+
+# Secret file
+.env
+
+# Cache
+__pycache__/
+.pytest_cache/
