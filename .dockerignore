@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+
+# Secret files
+.env
+
+# IDE files
+.idea/
+
+# Cache files
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Git history
+.git/
+.gitignore
+
+# Tests
+tests/
+
+# Documentation
+README.md
