@@ -9,6 +9,10 @@ FastAPI backend application.
 - Uvicorn 0.48.0 
 - Pytest 9.0.3
 - Docker
+- Database: PostgreSQL 15 (Alpine)
+- ORM / Driver: SQLAlchemy + Asyncpg (Fully asynchronous database connection)
+- Caching / Task Queue: Redis 7 (Alpine) + redis.asyncio
+- Containerization: Docker & Docker Compose
 
 ## Setup
 
@@ -41,7 +45,8 @@ FastAPI backend application.
    cp .env.sample .env
 ```
 
-## Run
+
+## Run the Uvicorn development server
 
 ```bash
 uvicorn main:app --reload
@@ -59,6 +64,11 @@ docker build -t internship-backend .
 Run container:
 ```bash
 docker run -p 8000:8000 --name fastapi-app internship-backend
+```
+
+Build and Run the Containers
+```bash
+docker-compose up --build
 ```
 
 ## Tests
