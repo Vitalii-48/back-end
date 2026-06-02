@@ -1,13 +1,6 @@
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import health  # Імпортуємо наш роутер з першої гілки
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import text
-import redis.asyncio as aioredis
-
-from app.core.database import get_db
-from app.core.redis import get_redis
+from app.routers import health
 app = FastAPI()
 
 # Чіткий список дозволених локальних адрес для безпеки
