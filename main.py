@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import health
+from app.routers import api_router
 app = FastAPI()
 
 # Чіткий список дозволених локальних адрес для безпеки
@@ -21,4 +21,4 @@ app.add_middleware(
 )
 
 # Підключаємо наш роутер (сам ендпоінт живе всередині app/routers/health.py)
-app.include_router(health.router)
+app.include_router(api_router)

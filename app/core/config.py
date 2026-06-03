@@ -1,13 +1,14 @@
-import os
-from pydantic import Field, model_validator
+from pathlib import Path
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # --- Перевірка середовища ---
-    is_in_docker: bool = Field(
-        default_factory=lambda: os.path.exists('/.dockerenv')
-    )
+    # Визначаємо BASE_DIR
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
+
+    # Перевірка середовища
+    is_in_docker: bool = Path('/.dockerenv').exists()
 
     # PostgreSQL
     POSTGRES_USER: str = "postgres"
