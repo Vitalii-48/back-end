@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 import redis.asyncio as aioredis
 
-from app.core.database import get_db
-from app.core.redis import get_redis
+from app.database.database import get_db
+from app.database.redis import get_redis
 
 router = APIRouter()
 

@@ -9,5 +9,7 @@ def test_health_check():
     assert response.json() == {
         "status_code": 200,
         "detail": "ok",
-        "result": "working"
+        "result": "working",
+        "postgres": "working",  # Додали, бо сервіс це повертає
+        "redis": "working"
     }
