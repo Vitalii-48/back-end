@@ -52,26 +52,25 @@ FastAPI backend application.
 
 ## Running the Application
 
-Local Development (Windows / Linux / Mac)
-To run the Uvicorn development server locally:
+### Local Development (Windows / Linux / Mac) to run the Uvicorn development server locally:
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Application runs on `http://127.0.0.1:8000`
-Interactive API documentation (Swagger UI): http://127.0.0.1:8000/docs
+- Application runs on `http://127.0.0.1:8000`
+- Interactive API documentation (Swagger UI): http://127.0.0.1:8000/docs
 
 
 ## Database Migrations (Alembic)
 Before running the app or after modifying database models, apply migrations:
 
-# Apply migrations to the database
+### Apply migrations to the database
 ```bash
   alembic upgrade head
 ```
 
-# Create a new automatic migration (if you changed models)
+### Create a new automatic migration (if you changed models)
 ```bash
   alembic revision --autogenerate -m "migration_name"
 ```
@@ -92,6 +91,14 @@ Stop the Containers
 ```bash
   docker compose down
 ```
+
+## API Endpoints
+
+- Health check (PostgreSQL + Redis status)
+- Auth (signin,signup)
+- Users(Get all users, Create a new user, Get user by ID, Update user, Delete user)
+
+
 
 ## Tests
 
