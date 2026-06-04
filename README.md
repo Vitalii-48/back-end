@@ -8,6 +8,7 @@ FastAPI backend application.
 - FastAPI 0.136.3 
 - Uvicorn 0.48.0 
 - Pytest 9.0.3
+- Docker
 
 ## Setup
 
@@ -45,9 +46,19 @@ FastAPI backend application.
 ```bash
 uvicorn main:app --reload
 ```
-Run container (запустити контейнер):
+
+Application runs on `http://127.0.0.1:8000`
+
+## Docker
+
+Build image
 ```bash
-docker run -p 8000:8000 internship-backend
+docker build -t internship-backend .
+```
+
+Run container:
+```bash
+docker run -p 8000:8000 --name fastapi-app internship-backend
 ```
 
 ## Tests
