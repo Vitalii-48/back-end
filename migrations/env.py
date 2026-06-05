@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 from app.core.config import settings
-
+from app.models.user import User
 sys.path.insert(0, str(settings.BASE_DIR))
 
 from app.database.base import Base
