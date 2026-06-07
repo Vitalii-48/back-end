@@ -6,6 +6,6 @@ redis_pool = aioredis.ConnectionPool.from_url(
     decode_responses=True
 )
 
-async def get_redis():
+async def get_db_redis():
     async with aioredis.Redis(connection_pool=redis_pool) as client:
         yield client

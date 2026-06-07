@@ -18,6 +18,17 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
 
+    # logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    ## List of addresses (frontend) that are allowed to make requests to our backend
+    CORS_ORIGINS: list[str] = [
+        "http://localhost",
+        "http://internship.local",
+        "http://localhost:3000",
+        "http://internship.local:3000",
+    ]
 
     model_config = SettingsConfigDict(
         env_file=".env",

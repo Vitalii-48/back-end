@@ -52,16 +52,22 @@ FastAPI backend application.
 
 ## Running the Application
 
-Local Development (Windows / Linux / Mac)
-To run the Uvicorn development server locally:
-
+### Locally
 ```bash
 uvicorn main:app --reload
 ```
+- App: `http://127.0.0.1:8000`
+- Swagger UI: `http://127.0.0.1:8000/docs`
 
-Application runs on `http://127.0.0.1:8000`
-Interactive API documentation (Swagger UI): http://127.0.0.1:8000/docs
+### Docker
+```bash
+docker compose up --build
+```
 
+Stop:
+```bash
+docker compose down
+```
 
 ## Database Migrations (Alembic)
 Before running the app or after modifying database models, apply migrations:
@@ -74,23 +80,7 @@ Before running the app or after modifying database models, apply migrations:
 # Create a new automatic migration (if you changed models)
 ```bash
   alembic revision --autogenerate -m "migration_name"
-```
-
-## Docker Deployment
-
-Build and Run the Containers
-```bash
-  docker compose up --build
-```
-
-Run container:
-```bash
-docker run -p 8000:8000 --name fastapi-app internship-backend
-```
-
-Stop the Containers
-```bash
-  docker compose down
+  alembic upgrade head
 ```
 
 ## Tests
