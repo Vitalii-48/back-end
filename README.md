@@ -80,8 +80,32 @@ Before running the app or after modifying database models, apply migrations:
 # Create a new automatic migration (if you changed models)
 ```bash
   alembic revision --autogenerate -m "migration_name"
-  alembic upgrade head
 ```
+
+## Docker Deployment
+
+Build and Run the Containers
+```bash
+  docker compose up --build
+```
+
+Run container:
+```bash
+docker run -p 8000:8000 --name fastapi-app internship-backend
+```
+
+Stop the Containers
+```bash
+  docker compose down
+```
+
+## API Endpoints
+
+- Health check (PostgreSQL + Redis status)
+- Auth (signin,signup)
+- Users(Get all users, Create a new user, Get user by ID, Update user, Delete user)
+
+
 
 ## Tests
 

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # Шлях до кореню проєкту
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
 
-    # PostgreSQL
+   # PostgreSQL
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "secret"
     POSTGRES_HOST: str = "postgres"
