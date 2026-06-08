@@ -1,9 +1,13 @@
 from functools import lru_cache
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-   # PostgreSQL
+    # Шлях до кореню проєкту
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
+
+    # PostgreSQL
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "secret"
     POSTGRES_HOST: str = "postgres"
@@ -14,6 +18,17 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
 
+    # logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    ## List of addresses (frontend) that are allowed to make requests to our backend
+    CORS_ORIGINS: list[str] = [
+        "http://localhost",
+        "http://internship.local",
+        "http://localhost:3000",
+        "http://internship.local:3000",
+    ]
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -8,11 +8,10 @@ FastAPI backend application.
 - FastAPI 0.136.3 
 - Uvicorn 0.48.0 
 - Pytest 9.0.3
-- Docker
+- Docker & Docker Compose
 - Database: PostgreSQL 15 (Alpine)
 - ORM / Driver: SQLAlchemy + Asyncpg (Fully asynchronous database connection)
 - Caching / Task Queue: Redis 7 (Alpine) + redis.asyncio
-- Containerization: Docker & Docker Compose
 
 ## Setup
 
@@ -41,34 +40,47 @@ FastAPI backend application.
 ```
 
 5. Create `.env` file from sample:
+# Windows (cmd/PowerShell)
+```bash
+   copy .env.sample .env
+```
+# Linux/Mac
 ```bash
    cp .env.sample .env
 ```
 
 
-## Run the Uvicorn development server
+## Running the Application
 
+### Locally
 ```bash
 uvicorn main:app --reload
 ```
+- App: `http://127.0.0.1:8000`
+- Swagger UI: `http://127.0.0.1:8000/docs`
 
-Application runs on `http://127.0.0.1:8000`
-
-## Docker
-
-Build image
+### Docker
 ```bash
-docker build -t internship-backend .
+docker compose up --build
 ```
 
-Run container:
+Stop:
 ```bash
-docker run -p 8000:8000 --name fastapi-app internship-backend
+docker compose down
 ```
 
-Build and Run the Containers
+## Database Migrations (Alembic)
+Before running the app or after modifying database models, apply migrations:
+
+# Apply migrations to the database
 ```bash
-docker-compose up --build
+  alembic upgrade head
+```
+
+# Create a new automatic migration (if you changed models)
+```bash
+  alembic revision --autogenerate -m "migration_name"
+  alembic upgrade head
 ```
 
 ## Tests
