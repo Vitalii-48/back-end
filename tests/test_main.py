@@ -10,6 +10,6 @@ def test_health_check():
         "status_code": 200,
         "detail": "ok",
         "result": "working",
-        "postgres": "working",  # Додали, бо сервіс це повертає
+        "postgres": "working",
         "redis": "working"
     }

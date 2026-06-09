@@ -1,4 +1,6 @@
 import logging
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models.user import User
@@ -21,7 +23,7 @@ class UserRepository:
         logger.debug(f"Fetched {len(users)} users, total={total}")
         return users, total or 0
 
-    async def get_by_id(self, user_id: int) -> User | None:
+    async def get_by_id(self, user_id: UUID) -> User | None:
         result = await self.db.execute(
             select(User).where(User.id == user_id)
         )

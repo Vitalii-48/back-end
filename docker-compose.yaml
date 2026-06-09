@@ -18,7 +18,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 20s
+      interval: 60s
       timeout: 10s
       retries: 3
       start_period: 30s
@@ -28,7 +28,7 @@ services:
     container_name: postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
+      interval: 60s
       timeout: 5s
       retries: 5
     environment:
