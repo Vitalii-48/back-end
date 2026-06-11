@@ -13,9 +13,17 @@ class UserCreate(SignUpRequest):
     """Схема для внутрішнього створення користувача в репозиторії"""
     pass
 
+# Email змінювати заборонено — він є ідентифікатором (identifier) у системі та Auth0.
 class UserUpdateRequest(BaseModel):
-    username: str | None = Field(default=None, examples=["new_user"])
-    password: str | None = Field(default=None, min_length=8, examples=["new_secret_password"])
+    username: str | None = Field(
+        default=None,
+        description="Нове ім'я користувача (username). Email змінити не можна.",
+        examples=["new_user"])
+    password: str | None = Field(
+        default=None,
+        min_length=8,
+        description="Новий пароль (password). Мінімум 8 символів.",
+        examples=["new_secret_password"])
 
 class UserDetailResponse(UserBase):
     id: UUID = Field(..., examples=["8c5c32b7-8b4f-4f3b-9f41-02464724b4c2"])

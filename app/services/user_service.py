@@ -43,7 +43,17 @@ class UserService:
         logger.info(f"Creating user: {data.email}")
         return await self.repo.create(user)
 
-    async def update_user(self, user_id: UUID, data: UserUpdateRequest) -> User:
+    async def update_user(self, user_id: UUID, data: UserUpdateRequest, current_user: User) -> User:
+        # Порівнюємо ID поточного користувача з ID якого намагаються змінити.
+        if current_user.id != user_id:
+            logger.warning(
+                f"User id={current_user.id} tried to update user id={user_id} — forbidden"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to edit another user's profile",
+            )
+
         user = await self.get_user_by_id(user_id)
 
         if data.username is not None:
@@ -55,7 +65,15 @@ class UserService:
         logger.info(f"Updating user id={user_id}")
         return await self.repo.update(user)
 
-    async def delete_user(self, user_id: UUID) -> None:
+    async def delete_user(self, user_id: UUID, current_user: User) -> None:
+        if current_user.id != user_id:
+            logger.warning(
+                f"User id={current_user.id} tried to delete user id={user_id} — forbidden"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to delete another user's profile",
+            )
         user = await self.get_user_by_id(user_id)
         logger.info(f"Deleting user id={user_id}")
         await self.repo.delete(user)
