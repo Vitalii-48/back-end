@@ -106,6 +106,30 @@ Stop the Containers
 - Users(Get all users, Create a new user, Get user by ID, Update user, Delete user)
 
 
+## Authentication (Авторизація)
+
+### Login/Password
+POST /auth/signin
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword"
+}
+```
+Повертає JWT токен.
+
+### Auth0
+POST /auth/auth0
+```json
+{
+  "token": "your_auth0_token"
+}
+```
+Отримати Auth0 токен: https://romanxeo.github.io/internship-token/
+
+### Get current user
+GET /me
+Потребує заголовок: `Authorization: Bearer <token>`
 
 ## Tests
 

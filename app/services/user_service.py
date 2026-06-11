@@ -1,4 +1,6 @@
 import logging
+from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.user_repository import UserRepository
@@ -16,7 +18,7 @@ class UserService:
         skip = (page - 1) * per_page
         return await self.repo.get_all(skip=skip, limit=per_page)
 
-    async def get_user_by_id(self, user_id: int) -> User:
+    async def get_user_by_id(self, user_id: UUID) -> User:
         user = await self.repo.get_by_id(user_id)
         if not user:
             raise HTTPException(
@@ -41,7 +43,7 @@ class UserService:
         logger.info(f"Creating user: {data.email}")
         return await self.repo.create(user)
 
-    async def update_user(self, user_id: int, data: UserUpdateRequest) -> User:
+    async def update_user(self, user_id: UUID, data: UserUpdateRequest) -> User:
         user = await self.get_user_by_id(user_id)
 
         if data.username is not None:
@@ -53,7 +55,7 @@ class UserService:
         logger.info(f"Updating user id={user_id}")
         return await self.repo.update(user)
 
-    async def delete_user(self, user_id: int) -> None:
+    async def delete_user(self, user_id: UUID) -> None:
         user = await self.get_user_by_id(user_id)
         logger.info(f"Deleting user id={user_id}")
         await self.repo.delete(user)
