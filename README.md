@@ -104,6 +104,7 @@ Stop the Containers
 - Health check (PostgreSQL + Redis status)
 - Auth (signin,signup)
 - Users(Get all users, Create a new user, Get user by ID, Update user, Delete user)
+- Companies (Create company, Get all companies with pagination, Get company by ID, Update company, Delete company)
 
 
 ## Authentication (Авторизація)
@@ -116,7 +117,7 @@ POST /auth/signin
   "password": "yourpassword"
 }
 ```
-Повертає JWT токен.
+Returns a JWT token.
 
 ### Auth0
 POST /auth/auth0
@@ -125,11 +126,50 @@ POST /auth/auth0
   "token": "your_auth0_token"
 }
 ```
-Отримати Auth0 токен: https://romanxeo.github.io/internship-token/
+Get Auth0 token: https://romanxeo.github.io/internship-token/
 
 ### Get current user
 GET /me
-Потребує заголовок: `Authorization: Bearer <token>`
+Required header: `Authorization: Bearer <token>`
+
+
+## Companies (Компанії)
+
+Any authenticated user can create a company and automatically becomes its Owner.
+### Create company
+POST /companies/
+Required header: `Authorization: Bearer <token>`
+```json
+{
+  "name": "My Company",
+  "description": "Company description",
+  "is_visible": true
+}
+```
+
+### Get all companies (with pagination)
+GET /companies/?page=1&page_size=10
+
+Returns only visible (`is_visible=true`) companies.
+
+### Get company by ID
+GET /companies/{company_id}
+
+### Update company
+PATCH /companies/{company_id}
+Required header: `Authorization: Bearer <token>`
+Access: Available only to the company Owner.
+Request Body: Send only the fields that need to be updated.
+```json
+{
+  "name": "Updated name"
+}
+```
+
+### Delete company
+DELETE /companies/{company_id}
+Required header: `Authorization: Bearer <token>`
+Access: Available only to the company Owner.
 
 ## Tests
 

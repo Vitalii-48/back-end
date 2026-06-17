@@ -28,7 +28,7 @@ class UserService:
         return user
 
     async def create_user(self, data: SignUpRequest) -> User:
-        # Перевіряємо чи email вже існує (conflict — конфлікт)
+        # Перевіряємо чи email вже існує
         existing = await self.repo.get_by_email(data.email)
         if existing:
             raise HTTPException(

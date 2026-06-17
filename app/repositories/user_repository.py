@@ -38,7 +38,6 @@ class UserRepository:
     async def create(self, user: User) -> User:
         self.db.add(user)
         await self.db.commit()
-        # refresh — оновлює об'єкт даними з БД (наприклад id, created_at)
         await self.db.refresh(user)
         return user
 
