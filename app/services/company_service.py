@@ -3,8 +3,11 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models import CompanyRole
 from app.models.company import Company
+from app.models.company_actions import CompanyMember
 from app.repositories.company_repository import CompanyRepository
+from app.repositories.company_member_repository import CompanyMemberRepository
 from app.models.user import User
 import logging
 
@@ -15,6 +18,7 @@ logger = logging.getLogger(__name__)
 class CompanyService:
     def __init__(self, session: AsyncSession):
         self.repo = CompanyRepository(session)
+        self.members_repo = CompanyMemberRepository(session)
 
 
     async def create_company(self, data: CompanyCreateRequest, current_user: User) -> CompanyDetailResponse:
@@ -26,6 +30,13 @@ class CompanyService:
         )
         logger.info(f"User {current_user.id} created company: {company.name}")
         created = await self.repo.create_company(company)
+        await self.members_repo.create_membership(
+            CompanyMember(
+                company_id=created.id,
+                user_id=current_user.id,
+                role=CompanyRole.OWNER
+            )
+        )
         return CompanyDetailResponse.model_validate(created)
 
 

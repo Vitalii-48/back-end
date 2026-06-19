@@ -8,6 +8,8 @@ from app.models.user import User
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.services.company_service import CompanyService
+from app.services.company_member_service import CompanyMemberService
+from app.services.company_request_service import CompanyRequestService
 from app.core.security import get_current_user_id
 
 
@@ -37,7 +39,20 @@ async def get_current_user(
 
     return await user_service.get_user_by_id(user_uuid)
 
+
 async def get_company_service(
     session: AsyncSession = Depends(get_db_postgres),
 ) -> CompanyService:
     return CompanyService(session)
+
+
+async def get_company_member_service(
+    session: AsyncSession = Depends(get_db_postgres),
+) -> CompanyMemberService:
+    return CompanyMemberService(session)
+
+
+async def get_company_request_service(
+    session: AsyncSession = Depends(get_db_postgres),
+) -> CompanyRequestService:
+    return CompanyRequestService(session)

@@ -137,7 +137,7 @@ Required header: `Authorization: Bearer <token>`
 
 Any authenticated user can create a company and automatically becomes its Owner.
 ### Create company
-POST /companies/
+POST /company/
 Required header: `Authorization: Bearer <token>`
 ```json
 {
@@ -148,15 +148,15 @@ Required header: `Authorization: Bearer <token>`
 ```
 
 ### Get all companies (with pagination)
-GET /companies/?page=1&page_size=10
+GET /company/?page=1&page_size=10
 
 Returns only visible (`is_visible=true`) companies.
 
 ### Get company by ID
-GET /companies/{company_id}
+GET /company/{company_id}
 
 ### Update company
-PATCH /companies/{company_id}
+PATCH /company/{company_id}
 Required header: `Authorization: Bearer <token>`
 Access: Available only to the company Owner.
 Request Body: Send only the fields that need to be updated.
@@ -167,9 +167,78 @@ Request Body: Send only the fields that need to be updated.
 ```
 
 ### Delete company
-DELETE /companies/{company_id}
+DELETE /company/{company_id}
 Required header: `Authorization: Bearer <token>`
 Access: Available only to the company Owner.
+
+
+
+## Company Actions
+
+All endpoints below require:
+
+```http
+Authorization: Bearer <token>
+```
+
+### Invitations
+
+#### Send invitation
+
+Owner sends an invitation to a user:
+POST /company/{company_id}/invitations
+```json
+{
+  "user_id": "user-uuid"
+}
+```
+
+Owner views sent pending invitations:
+GET /company/{company_id}/invitations?page=1&per_page=10
+
+Owner cancels an invitation:
+POST /company/invitations/{request_id}/cancel
+
+User views received invitations:
+GET /company/me/invitations?page=1&per_page=10
+
+User accepts an invitation:
+POST /company/invitations/{request_id}/accept
+
+User declines an invitation:
+POST /company/invitations/{request_id}/decline
+
+### Join Requests
+
+User requests to join a company:
+POST /company/{company_id}/join-requests
+
+User views own pending join requests:
+GET /company/me/join-requests?page=1&per_page=10
+
+User cancels own join request:
+POST /company/join-requests/{request_id}/cancel
+
+Owner views pending join requests:
+GET /company/{company_id}/join-requests?page=1&per_page=10
+
+Owner accepts a join request:
+POST /company/join-requests/{request_id}/accept
+
+Owner declines a join request:
+POST /company/join-requests/{request_id}/decline
+
+### Members
+
+View company members:
+GET /company/{company_id}/members?page=1&per_page=10
+
+User leaves company:
+DELETE /company/{company_id}/members/me
+
+Owner removes a member:
+DELETE /company/{company_id}/members/{user_id}
+
 
 ## Tests
 
