@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.core.dependencies import get_current_user, get_company_member_service
 from app.models.user import User
-from app.schemas.company_actions import CompanyMembersListResponse
+from app.schemas.company_actions import CompanyMembersListResponse, CompanyAdminsListResponse, CompanyMemberResponse
 from app.services.company_member_service import CompanyMemberService
 
 router = APIRouter(prefix="/company", tags=["Company Members"])
@@ -42,3 +42,50 @@ async def remove_company_member(
 ):
     """Owner видаляє користувача з компанії."""
     await member_service.remove_member(company_id, user_id, current_user)
+
+
+@router.post(
+    "/{company_id}/members/{user_id}/make-admin",
+    response_model=CompanyMemberResponse,
+)
+async def make_admin(
+        company_id: UUID,
+        user_id: UUID,
+        current_user: User = Depends(get_current_user),
+        member_service: CompanyMemberService = Depends(get_company_member_service),
+):
+    """
+    Owner призначає учасника компанії адміністратором.
+    """
+    return await member_service.make_admin(company_id, user_id, current_user)
+
+@router.post(
+    "/{company_id}/members/{user_id}/remove-admin",
+    response_model=CompanyMemberResponse,
+)
+async def remove_admin(
+        company_id: UUID,
+        user_id: UUID,
+        current_user: User = Depends(get_current_user),
+        member_service: CompanyMemberService = Depends(get_company_member_service),):
+    """
+    Owner знімає роль адміністратора з учасника, повертаючи його до MEMBER.
+    """
+    return await member_service.remove_admin(company_id, user_id, current_user)
+
+@router.get(
+    "/{company_id}/admins",
+    response_model=CompanyAdminsListResponse,
+)
+async def get_admins(
+        company_id: UUID,
+        offset: int = Query(default=0, ge=0),
+        limit: int = Query(default=10, ge=1, le=100),
+        current_user: User = Depends(get_current_user),
+        member_service: CompanyMemberService = Depends(get_company_member_service),
+):
+    """
+    Повертає список адміністраторів компанії з пагінацією.
+    """
+    return await member_service.get_admins(company_id, offset, limit)
+

@@ -171,7 +171,7 @@ async def test_owner_accepts_join_request_and_user_becomes_member():
 @pytest.mark.asyncio
 async def test_owner_can_remove_member():
     service = CompanyMemberService(AsyncMock())
-    service.repo = AsyncMock()
+    service.member_repo = AsyncMock()
     service.company_repo = AsyncMock()
 
     owner = make_user()
@@ -181,11 +181,11 @@ async def test_owner_can_remove_member():
     membership.user_id = member_id
 
     service.company_repo.get_company_by_id.return_value = company
-    service.repo.get_membership_by_company_and_user.return_value = membership
+    service.member_repo.get_membership_by_company_and_user.return_value = membership
 
     await service.remove_member(company.id, member_id, owner)
 
-    service.repo.delete_membership.assert_called_once_with(membership)
+    service.member_repo.delete_membership.assert_called_once_with(membership)
 
 
 # ─── Tests: user leaves company ──────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ async def test_owner_can_remove_member():
 @pytest.mark.asyncio
 async def test_user_can_leave_company():
     service = CompanyMemberService(AsyncMock())
-    service.repo = AsyncMock()
+    service.member_repo = AsyncMock()
     service.company_repo = AsyncMock()
 
     owner_id = uuid4()
@@ -203,11 +203,11 @@ async def test_user_can_leave_company():
     membership.user_id = user.id
 
     service.company_repo.get_company_by_id.return_value = company
-    service.repo.get_membership_by_company_and_user.return_value = membership
+    service.member_repo.get_membership_by_company_and_user.return_value = membership
 
     await service.leave_company(company.id, user)
 
-    service.repo.delete_membership.assert_called_once_with(membership)
+    service.member_repo.delete_membership.assert_called_once_with(membership)
 
 
 # ─── Tests: owner cannot leave ──────────────────────────────────────────────────────

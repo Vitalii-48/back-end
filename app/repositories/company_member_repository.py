@@ -7,6 +7,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.company_actions import CompanyMember
+from app.models.enums import CompanyRole
 
 logger = logging.getLogger(__name__)
 
@@ -69,3 +70,41 @@ class CompanyMemberRepository:
             f"Fetched {len(members)} members for company={company_id}, total={total}"
         )
         return members, total or 0
+
+
+    async def get_admins_by_company_id(self, company_id: UUID, offset: int = 0, limit: int = 10) -> tuple[list[CompanyMember], int]:
+        """
+        Фільтрує учасників зі статусом ADMIN на рівні бази даних.
+        """
+        query = (
+            select(CompanyMember)
+            .where(
+                CompanyMember.company_id == company_id,
+                CompanyMember.role == CompanyRole.ADMIN
+            )
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self.db_session.execute(query)
+        admins = list(result.scalars().all())
+        total = await self.db_session.scalar(
+            select(func.count(CompanyMember.id)).where(
+                CompanyMember.company_id == company_id,
+                CompanyMember.role == CompanyRole.ADMIN,
+            )
+        )
+        logger.debug(f"Fetched {len(admins)} admins, total={total}")
+        return admins, total or 0
+
+
+    async def update_member_role(self, member: CompanyMember, new_role: CompanyRole) -> CompanyMember:
+        """
+        Приймає вже готовий ORM-об'єкт.
+        """
+        member.role = new_role
+
+        # Оскільки об'єкт уже прив'язаний до сесії (ми дістали його раніше),
+        # SQLAlchemy автоматично відстежує зміни (Unit of Work pattern).
+        await self.db_session.commit()
+        await self.db_session.refresh(member)
+        return member

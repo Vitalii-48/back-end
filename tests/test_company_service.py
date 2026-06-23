@@ -1,5 +1,6 @@
 # app/tests/test_company_service.py
 import pytest
+from datetime import datetime, UTC
 from uuid import uuid4, UUID
 from unittest.mock import AsyncMock, MagicMock
 from app.services.company_service import CompanyService
@@ -22,12 +23,15 @@ def make_company(company_id: UUID, owner_id: UUID) -> Company:
     company.name = "Test Company"
     company.description = "desc"
     company.is_visible = True
+    company.created_at = datetime.now(UTC)
+    company.updated_at = datetime.now(UTC)
     return company
 
 
 @pytest.fixture
 def service():
     session = AsyncMock()
+    session.add = MagicMock()
     svc = CompanyService(session)
     svc.repo = AsyncMock()  # Мокаємо наш CompanyRepository
     return svc
@@ -36,15 +40,28 @@ def service():
 @pytest.mark.asyncio
 async def test_create_company(service):
     user_id = uuid4()
+    company_id = uuid4()
     user = make_user(user_id)
-    company = make_company(uuid4(), user_id)
 
-    service.repo.create_company = AsyncMock(return_value=company)
+    # Налаштовуємо session.refresh щоб він заповнював поля компанії.
+    # side_effect (побічний ефект — дія що відбувається при виклику мока)
+    # отримує об'єкт company і заповнює його поля, імітуючи що зробила б реальна БД.
+    async def fake_refresh(obj):
+        obj.id = company_id
+        obj.created_at = datetime.now(UTC)
+        obj.updated_at = datetime.now(UTC)
 
-    data = CompanyCreateRequest(name="Test", is_visible=True)
+    service.session.refresh.side_effect = fake_refresh
+
+    data = CompanyCreateRequest(name="Test Company", is_visible=True)
     result = await service.create_company(data, user)
 
-    service.repo.create_company.assert_called_once()
+    # Перевіряємо що сесія додала об'єкт (add — додати)
+    service.session.add.assert_called()
+    # Перевіряємо що commit (фіксація транзакції — збереження змін) був викликаний
+    service.session.commit.assert_called_once()
+    # Перевіряємо що результат містить правильне ім'я
+    assert result.name == "Test Company"
 
 
 @pytest.mark.asyncio
@@ -69,7 +86,7 @@ async def test_update_company_success(service):
     service.repo.get_company_by_id = AsyncMock(return_value=company)
     service.repo.update_company = AsyncMock(return_value=company)
 
-    data = CompanyUpdateRequest(company_name="Updated Name")
+    data = CompanyUpdateRequest(name="Updated Name", description=None)
     result = await service.update_company(company_id, data, user)
 
     service.repo.update_company.assert_called_once()
@@ -85,7 +102,7 @@ async def test_update_company_forbidden(service):
     service.repo.get_company_by_id = AsyncMock(return_value=company)
 
     user = make_user(stranger_id)  # не власник намагається оновити
-    data = CompanyUpdateRequest(company_name="New name")
+    data = CompanyUpdateRequest(name="New name", description=None)
 
     with pytest.raises(HTTPException) as exc:
         await service.update_company(company_id, data, user)
