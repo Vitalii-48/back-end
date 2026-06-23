@@ -240,6 +240,76 @@ Owner removes a member:
 DELETE /company/{company_id}/members/{user_id}
 
 
+## Company Actions & Administration
+All endpoints listed below require a valid bearer token passed via headers: Authorization: Bearer <token>.
+
+### 📩 Invitations Workflow
+Owner sends an invitation to a user:
+POST /company/{company_id}/invitations (Body: {"user_id": "uuid"})
+
+Owner views sent pending invitations:
+GET /company/{company_id}/invitations?page=1&per_page=10
+
+Owner cancels an invitation:
+POST /company/invitations/{request_id}/cancel
+
+User views received invitations:
+GET /company/me/invitations?page=1&per_page=10
+
+User accepts an invitation:
+POST /company/invitations/{request_id}/accept
+
+User declines an invitation:
+POST /company/invitations/{request_id}/decline
+
+### 📥 Join Requests Workflow
+User requests to join a company:
+POST /company/{company_id}/join-requests
+
+User views own pending join requests:
+GET /company/me/join-requests?page=1&per_page=10
+
+User cancels own join request:
+POST /company/join-requests/{request_id}/cancel
+
+Owner views pending join requests:
+GET /company/{company_id}/join-requests?page=1&per_page=10
+
+Owner accepts a join request:
+POST /company/join-requests/{request_id}/accept
+
+Owner declines a join request:
+POST /company/join-requests/{request_id}/decline
+
+### 👥 Members & Administrative Management
+This module handles role-based access control inside companies, distinguishing permissions between Owners, Admins, and Members.
+Method/Endpoint - DescriptionAccess -> Level
+GET/company/{company_id}/members - Get paginated list of all members (total count included) -> Member / Admin / Owner
+
+DELETE/company/{company_id}/members/me - Leave the company (Owners cannot leave their own company) -> Member / Admin
+
+DELETE/company/{company_id}/members/{user_id} - Remove a member from the company -> Owner Only
+
+POST/company/{company_id}/members/{user_id}/make-admin - Promote a member to Administrator role -> Owner Only
+
+POST/company/{company_id}/members/{user_id}/remove-admin - Demote an Administrator back to standard Member -> Owner Only
+
+GET/company/{company_id}/admins - Get paginated list of active company administrators -> Member / Admin / Owner
+
+Example Members/Admins Paginated Response:JSON{
+  "members": [
+    {
+      "id": "c3098f41-0731-419b-a36c-2f9543e06de9",
+      "company_id": "8fa11b22-54a7-4b72-8802-95f329938e11",
+      "user_id": "1fa54f11-92e1-4c32-b715-1a953e9982fb",
+      "role": "ADMIN",
+      "created_at": "2026-06-23T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+
+
 ## Tests
 
 ```bash
