@@ -50,13 +50,13 @@ class CompanyMemberRepository:
         return result.scalar_one_or_none()
 
     async def get_members_by_company(
-        self, company_id: UUID, skip: int = 0, limit: int = 10
+        self, company_id: UUID, offset: int = 0, limit: int = 10
     ) -> tuple[list[CompanyMember], int]:
         """Список членів компанії з пагінацією (subtask: 'view the list of users in a company')."""
         result = await self.db_session.execute(
             select(CompanyMember)
             .where(CompanyMember.company_id == company_id)
-            .offset(skip)
+            .offset(offset)
             .limit(limit)
         )
         members = list(result.scalars().all())

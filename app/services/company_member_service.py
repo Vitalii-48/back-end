@@ -39,7 +39,7 @@ class CompanyMemberService:
         """Endpoint: 'view the list of users in a company' (з пагінацією)."""
         skip = (page - 1) * per_page
         members, total = await self.member_repo.get_members_by_company(
-            company_id, skip=skip, limit=per_page
+            company_id, offset=skip, limit=per_page
         )
         return CompanyMembersListResponse(
             members=[CompanyMemberResponse.model_validate(m) for m in members],

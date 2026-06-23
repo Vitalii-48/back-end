@@ -79,13 +79,12 @@ async def remove_admin(
 )
 async def get_admins(
         company_id: UUID,
-        offset: int = Query(default=0, ge=0),
-        limit: int = Query(default=10, ge=1, le=100),
-        current_user: User = Depends(get_current_user),
+        page: int = Query(default=1, ge=1, description="Номер сторінки"),
+        per_page: int = Query(default=10, ge=1, le=100, description="Кількість на сторінці"),
         member_service: CompanyMemberService = Depends(get_company_member_service),
 ):
     """
     Повертає список адміністраторів компанії з пагінацією.
     """
-    return await member_service.get_admins(company_id, offset, limit)
+    return await member_service.get_admins(company_id, page, per_page)
 
