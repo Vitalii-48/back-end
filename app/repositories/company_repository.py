@@ -38,10 +38,14 @@ class CompanyRepository:
 
     async def get_all_companies(self, skip: int = 0, limit: int = 10) -> tuple[list[Company], int]:
         result = await self.db_session.execute(
-            select(Company).offset(skip).limit(limit)
+            select(Company)
+            .where(Company.is_visible == True)
+            .offset(skip).limit(limit)
         )
         companies = list(result.scalars().all())
-        # Рахуємо загальну кількість (total count)
-        total = await self.db_session.scalar(select(func.count(Company.id)))
+        # Рахуємо загальну кількість
+        total = await self.db_session.scalar(
+            select(func.count(Company.id))
+            .where(Company.is_visible == True))
         logger.debug(f"Fetched {len(companies)} companies, total={total}")
         return companies, total or 0

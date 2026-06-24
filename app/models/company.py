@@ -19,10 +19,10 @@ class Company(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str|None] = mapped_column(String, nullable=True)
 
-    # 🔒 Поле видимості (hidden / visible)
+    # Поле видимості (hidden / visible)
     is_visible: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    # 🤝 Зв'язок з юзером (Owner)
+    # Зв'язок з юзером (Owner)
     owner_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     owner: Mapped["User"] = relationship(back_populates="companies")

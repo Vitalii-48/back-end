@@ -20,7 +20,7 @@ async def create_company(
 
 @router.get("/", response_model=CompaniesListResponse)
 async def get_companies(
-    page: int = Query(default=1, ge=1, description="Номер сторінки (page number)"),
+    page: int = Query(default=1, ge=1, description="Номер сторінки"),
     per_page: int = Query(default=10, ge=1, le=100, description="Кількість на сторінці"),
     company_service: CompanyService = Depends(get_company_service),
 ):
