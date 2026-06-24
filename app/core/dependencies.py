@@ -14,15 +14,15 @@ from app.core.security import get_current_user_id
 
 
 def get_auth_service(
-    db: AsyncSession = Depends(get_db_postgres),
+    session: AsyncSession = Depends(get_db_postgres),
 ) -> AuthService:
-    return AuthService(db)
+    return AuthService(session)
 
 
 def get_user_service(
-    db: AsyncSession = Depends(get_db_postgres),
+    session: AsyncSession = Depends(get_db_postgres),
 ) -> UserService:
-    return UserService(db)
+    return UserService(session)
 
 
 async def get_current_user(
