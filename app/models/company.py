@@ -33,7 +33,7 @@ class Company(TimestampMixin, Base):
         cascade="all, delete-orphan",
     )
 
-    # 📨 Запрошення та запити на вступ до компанії
+    # Запрошення та запити на вступ до компанії
     requests: Mapped[list["CompanyRequest"]] = relationship(
         back_populates="company",
         cascade="all, delete-orphan",

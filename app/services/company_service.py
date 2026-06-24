@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import CompanyRole
 from app.models.company import Company
-from app.models.company_actions import CompanyMember
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.company_member_repository import CompanyMemberRepository
 from app.models.user import User
@@ -21,33 +20,33 @@ class CompanyService:
         self.repo = CompanyRepository(session)
         self.members_repo = CompanyMemberRepository(session)
 
+    async def create_company(
+            self,
+            data: CompanyCreateRequest,
+            current_user: User,
+    ) -> CompanyDetailResponse:
 
-    async def create_company(self, data: CompanyCreateRequest, current_user: User) -> CompanyDetailResponse:
-        company = Company(
-            name=data.name,
-            description=data.description,
-            is_visible=data.is_visible,
-            owner_id=current_user.id,
-        )
-        self.session.add(company)
-        # flush() надсилає INSERT у базу і генерує company.id,
-        # але ЩЕ НЕ фіксує транзакцію - її можна повністю відкотити.
-        await self.session.flush()
+        try:
+            company = await self.repo.create_company(
+                data=data,
+                owner_id=current_user.id,
+            )
 
-        owner_membership = CompanyMember(
-            company_id=company.id,
-            user_id=current_user.id,
-            role=CompanyRole.OWNER,
-        )
-        self.session.add(owner_membership)
+            await self.members_repo.create_member(
+                company_id=company.id,
+                user_id=current_user.id,
+                role=CompanyRole.OWNER,
+            )
 
-        # Один COMMIT на обидва записи: або Company + CompanyMember
-        # збережуться РАЗОМ, або (при помилці) відкотяться РАЗОМ.
-        await self.session.commit()
-        await self.session.refresh(company)
+            await self.session.commit()
 
-        logger.info(f"User {current_user.id} created company: {company.name}")
-        return CompanyDetailResponse.model_validate(company)
+            await self.session.refresh(company)
+
+            return CompanyDetailResponse.model_validate(company)
+
+        except Exception:
+            await self.session.rollback()
+            raise
 
 
     async def get_company(self, company_id: UUID) -> Company:
