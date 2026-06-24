@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_user_service
-from app.database.db_postgres import get_db_postgres
 from app.models import User
 from app.services.user_service import UserService
 from app.schemas.user import SignUpRequest, UserUpdateRequest, UserDetailResponse, UsersListResponse
