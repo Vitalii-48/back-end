@@ -20,10 +20,16 @@ class User(TimestampMixin, Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    companies: Mapped[list["Company"]] = relationship("Company", back_populates="owner")
+    companies: Mapped[list["Company"]] = relationship(
+        "Company",
+        back_populates="owner")
 
     #  Компанії, в яких користувач є членом (через CompanyMember)
-    memberships: Mapped[list["CompanyMember"]] = relationship(back_populates="user")
+    memberships: Mapped[list["CompanyMember"]] = relationship(
+        "CompanyMember",
+        back_populates="user")
 
     #  Запрошення/запити, де цей користувач є адресатом або ініціатором
-    company_requests: Mapped[list["CompanyRequest"]] = relationship(back_populates="user")
+    company_requests: Mapped[list["CompanyRequest"]] = relationship(
+        "CompanyRequest",
+        back_populates="user")

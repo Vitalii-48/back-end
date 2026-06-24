@@ -2,6 +2,7 @@ from app.models.company import Company
 from app.models.user import User
 from app.models.company_actions import CompanyMember, CompanyRequest
 from app.models.enums import CompanyRole, RequestType, RequestStatus
+from app.models.quiz import Quiz, QuizQuestion, QuizAnswerOption
 __all__ = [
     "User",
     "Company",
@@ -9,6 +10,9 @@ __all__ = [
     "RequestType",
     "RequestStatus",
     "CompanyMember",
-    "CompanyRequest"
+    "CompanyRequest",
+    "Quiz",
+    "QuizQuestion",
+    "QuizAnswerOption",
 ]
 

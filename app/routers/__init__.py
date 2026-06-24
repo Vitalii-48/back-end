@@ -1,7 +1,7 @@
 # app/routers/__init__.py
 
 from fastapi import APIRouter
-from app.routers import health, auth, users, company
+from app.routers import health, auth, users, company_router
 from app.routers import company_members, company_requests
 
 # 1. Створюємо головний роутер
