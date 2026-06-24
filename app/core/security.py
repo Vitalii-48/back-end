@@ -34,7 +34,7 @@ def decode_access_token(token: str) -> dict:
             algorithms=[settings.ALGORITHM]
         )
         return payload
-    except InvalidTokenError:  # Помилка з бібліотеки PyJWT
+    except InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
