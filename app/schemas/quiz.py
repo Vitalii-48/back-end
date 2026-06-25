@@ -1,5 +1,5 @@
 # app/schemas/quiz.py
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 
 # AnswerOption schemas ──────────────────────────────────────────────
@@ -24,18 +24,19 @@ class QuizQuestionBase(BaseModel):
 class QuizQuestionCreate(QuizQuestionBase):
     options: list[QuizAnswerOptionCreate] = Field(..., description="Список варіантів відповідей")
 
-    @model_validator(mode="after")
-    def validate_options(self) -> "QuizQuestionCreate":
+    @field_validator("options")
+    @classmethod
+    def validate_options(cls, options: list[QuizAnswerOptionCreate]) -> "QuizQuestionCreate":
         # Правило 1: Кількість відповідей від 2 до 4
-        if not (2 <= len(self.options) <= 4):
+        if not (2 <= len(options) <= 4):
             raise ValueError("Кожне питання повинно мати від 2 до 4 варіантів відповідей.")
 
         # Правило 2: Хоча б одна відповідь правильна
-        has_correct = any(option.is_correct for option in self.options)
+        has_correct = any(option.is_correct for option in options)
         if not has_correct:
             raise ValueError("У питанні повинен бути хоча б один правильний варіант відповіді.")
 
-        return self
+        return options
 
 
 class QuizQuestionResponse(QuizQuestionBase):
@@ -54,12 +55,13 @@ class QuizBase(BaseModel):
 class QuizCreateRequest(QuizBase):
     questions: list[QuizQuestionCreate] = Field(..., description="Список питань для квізу")
 
-    @model_validator(mode="after")
-    def validate_questions(self) -> "QuizCreateRequest":
+    @field_validator("questions")
+    @classmethod
+    def validate_questions(cls, questions: list[QuizQuestionCreate]) -> list[QuizQuestionCreate]:
         # Правило 3: Мінімум 2 питання в квізі
-        if len(self.questions) < 2:
+        if len(questions) < 2:
             raise ValueError("Квіз повинен містити мінімум 2 питання.")
-        return self
+        return questions
 
 
 class QuizUpdateRequest(BaseModel):
@@ -67,11 +69,14 @@ class QuizUpdateRequest(BaseModel):
     description: str | None = Field(default=None, max_length=1000)
     questions: list[QuizQuestionCreate] | None = None
 
-    @model_validator(mode="after")
-    def validate_questions(self) -> "QuizUpdateRequest":
-        if self.questions is not None and len(self.questions) < 2:
+    @field_validator("questions")
+    @classmethod
+    def validate_questions(cls, questions: list[QuizQuestionCreate] | None) -> list[QuizQuestionCreate] | None:
+        # Валідація спрацює тільки якщо фронтенд передав поле "questions"
+        if questions is not None and len(questions) < 2:
             raise ValueError("Квіз повинен містити мінімум 2 питання.")
-        return self
+        return questions
+
 
 
 # Схема, яку ми віддамо у відповідь клієнту
@@ -97,3 +102,5 @@ class QuizShortResponse(BaseModel):
 class QuizzesListResponse(BaseModel):
     quizzes: list[QuizShortResponse]
     total: int
+    page: int
+    per_page: int

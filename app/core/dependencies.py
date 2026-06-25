@@ -5,11 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db_postgres import get_db_postgres
 from app.models.user import User
+from app.repositories.quiz_repository import QuizRepository
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.services.company_service import CompanyService
-from app.services.company_member_service import CompanyMemberService
+from app.services.company_member_service import CompanyMemberService, CompanyMemberRepository
 from app.services.company_request_service import CompanyRequestService
+from app.services.quiz_service import QuizService
 from app.core.security import get_current_user_id
 
 
@@ -56,3 +58,12 @@ async def get_company_request_service(
     session: AsyncSession = Depends(get_db_postgres),
 ) -> CompanyRequestService:
     return CompanyRequestService(session)
+
+
+# Функцію-залежність для квізів:
+async def get_quiz_service(
+        session: AsyncSession = Depends(get_db_postgres),
+) -> QuizService:
+    quiz_repo = QuizRepository(session)
+    member_repo = CompanyMemberRepository(session)
+    return QuizService(quiz_repo=quiz_repo, member_repo=member_repo)
