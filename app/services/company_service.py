@@ -38,6 +38,7 @@ class CompanyService:
 
     async def get_company(self, company_id: UUID, current_user: User | None = None) -> Company:
         company = await self.repo.get_company_by_id(company_id)
+
         if not company:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -81,7 +82,6 @@ class CompanyService:
             companies=[CompanyDetailResponse.model_validate(c) for c in companies],
             total=total,
         )
-
 
 
     async def delete_company(self, company_id: UUID, current_user: User):
