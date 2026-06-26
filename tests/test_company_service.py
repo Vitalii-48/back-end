@@ -52,6 +52,7 @@ async def test_create_company(service):
         obj.created_at = datetime.now(UTC)
         obj.updated_at = datetime.now(UTC)
 
+    service.session.refresh.side_effect = fake_refresh
     data = CompanyCreateRequest(name="Test Company", is_visible=True)
     result = await service.create_company(data, user)
 

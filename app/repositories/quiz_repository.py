@@ -3,6 +3,7 @@ from uuid import UUID
 import logging
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from app.models.quiz import Quiz, QuizQuestion, QuizAnswerOption
 from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest
 
@@ -52,10 +53,15 @@ class QuizRepository:
         # 4. Коли вся ієрархія додана в сесію, робимо ОДИН фінальний commit
         await self.session.commit()
 
-        # 5. Оновлюємо об'єкт (двостороння логіка lazy="selectin" підтягне питання й відповіді)
-        await self.session.refresh(quiz)
-
-        return quiz
+        # 5. Оновлюємо об'єкт
+        result = await self.session.execute(
+            select(Quiz)
+            .options(
+                selectinload(Quiz.questions).selectinload(QuizQuestion.options)
+            )
+            .where(Quiz.id == quiz.id)
+        )
+        return result.scalar_one()
 
     async def update_quiz(self, quiz: Quiz, data: QuizUpdateRequest) -> Quiz:
         """

@@ -30,7 +30,7 @@ class QuizService:
     async def get_company_quizzes_list(
         self, company_id: UUID, user_id: UUID, page: int, size: int
     ) -> QuizzesListResponse:
-        await self._ensure_admin(user_id=user_id, company_id=company_id)
+        await self._ensure_member(user_id=user_id, company_id=company_id)
         skip = (page - 1) * size
         quizzes, total = await self.quiz_repo.get_company_quizzes(
             company_id=company_id, skip=skip, limit=size
@@ -66,6 +66,19 @@ class QuizService:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="У вас немає прав для цієї дії.",
+            )
+
+    async def _ensure_member(self, user_id: UUID, company_id: UUID) -> None:
+        """Кидає 403 якщо user не є учасником компанії."""
+        membership = await self.member_repo.get_membership_by_company_and_user(
+            user_id=user_id,
+            company_id=company_id,
+        )
+
+        if not membership:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not a member of this company.",
             )
 
     async def _get_quiz_or_404(self, quiz_id: UUID, company_id: UUID):

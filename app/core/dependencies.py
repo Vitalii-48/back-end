@@ -9,7 +9,8 @@ from app.repositories.quiz_repository import QuizRepository
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.services.company_service import CompanyService
-from app.services.company_member_service import CompanyMemberService, CompanyMemberRepository
+from app.services.company_member_service import CompanyMemberService
+from app.repositories.company_member_repository import CompanyMemberRepository
 from app.services.company_request_service import CompanyRequestService
 from app.services.quiz_service import QuizService
 from app.core.security import get_current_user_id

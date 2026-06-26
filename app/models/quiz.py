@@ -38,7 +38,7 @@ class QuizQuestion(Base):
 
     # Зв'язок один-до-багатьох: Питання -> Варіанти відповідей
     options: Mapped[list["QuizAnswerOption"]] = relationship(
-        "QuizQuestion",
+        "QuizAnswerOption",
         back_populates="question",
         cascade="all, delete-orphan",
         lazy="selectin"

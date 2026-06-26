@@ -49,7 +49,7 @@ class QuizQuestionResponse(QuizQuestionBase):
 # Quiz schemas
 class QuizBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=255, description="Назва квізу")
-    description: str | None = Field(default=None, max_length=1000, description="Опис квізу")
+    description: str | None = Field(default=None, max_length=255, description="Опис квізу")
 
 
 class QuizCreateRequest(QuizBase):
@@ -66,7 +66,7 @@ class QuizCreateRequest(QuizBase):
 
 class QuizUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=3, max_length=255)
-    description: str | None = Field(default=None, max_length=1000)
+    description: str | None = Field(default=None, max_length=255)
     questions: list[QuizQuestionCreate] | None = None
 
     @field_validator("questions")
