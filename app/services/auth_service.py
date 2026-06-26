@@ -30,17 +30,6 @@ class AuthService:
                 detail="Invalid credentials",  # Невірні дані
             )
 
-            # Тимчасовий debug лог
-        logger.info(f"Input password: {data.password}")
-        logger.info(f"Hashed in DB: {user.hashed_password}")
-
-        password_valid = bcrypt.checkpw(
-            data.password.encode("utf-8"),
-            user.hashed_password.encode("utf-8")
-        )
-
-        logger.info(f"Password valid: {password_valid}")
-
 
         # Перевіряємо пароль
         password_valid = bcrypt.checkpw(
@@ -74,8 +63,10 @@ class AuthService:
         payload = await verify_auth0_token(token)
 
         # Auth0 кладе email у payload як claim (заявка/твердження)
-        email = payload.get("email") or payload.get(
-            f"{settings.AUTH0_DOMAIN}/email"  # кастомний claim
+        email = (
+                payload.get("email")
+                or payload.get(f"https://{settings.AUTH0_DOMAIN}/email")
+                or payload.get(f"{settings.AUTH0_DOMAIN}/email")
         )
 
         if not email:
@@ -90,13 +81,14 @@ class AuthService:
             logger.info(f"Creating new user from Auth0: {email}")
             # Імпортуємо тут щоб уникнути circular import (циклічного імпорту)
             from app.models.user import User
+            from app.utils.hashing import hash_password
             import uuid
             user = await self.user_repo.create(
                 User(
                     id=uuid.uuid4(),  # Явно генеруємо UUID тут!
                     email=email,
                     username=email.split("@")[0],  # Ім'я з email
-                    hashed_password="auth0_user_no_password",  # Заглушка
+                    hashed_password=hash_password(uuid.uuid4().hex),
                 )
             )
 

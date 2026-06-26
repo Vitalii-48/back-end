@@ -1,16 +1,14 @@
 from fastapi import APIRouter, Depends, status, Query
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.dependencies import get_current_user, get_user_service
 from app.database.db_postgres import get_db_postgres
+from app.models import User
 from app.services.user_service import UserService
 from app.schemas.user import SignUpRequest, UserUpdateRequest, UserDetailResponse, UsersListResponse
 
 router = APIRouter(prefix="/users", tags=["Users"])
-
-def get_user_service(
-    db: AsyncSession = Depends(get_db_postgres),
-) -> UserService:
-    return UserService(db)
 
 @router.get("/", response_model=UsersListResponse)
 async def get_users(
@@ -41,13 +39,15 @@ async def create_user(
 async def update_user(
     user_id: UUID,
     data: UserUpdateRequest,
+    current_user: User = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
-    return await user_service.update_user(user_id, data)
+    return await user_service.update_user(user_id, data, current_user)
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     user_service:UserService = Depends(get_user_service)
 ):
-    await user_service.delete_user(user_id)
+    await user_service.delete_user(user_id, current_user)
