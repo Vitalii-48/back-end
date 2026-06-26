@@ -42,7 +42,6 @@ async def test_create_company(service):
     user_id = uuid4()
     company_id = uuid4()
     user = make_user(user_id)
-    company = make_company(uuid4(), user_id)
 
     # Налаштовуємо session.refresh щоб він заповнював поля компанії.
     # side_effect (побічний ефект — дія що відбувається при виклику мока)
@@ -52,14 +51,17 @@ async def test_create_company(service):
         obj.created_at = datetime.now(UTC)
         obj.updated_at = datetime.now(UTC)
 
+    service.session.refresh.side_effect = fake_refresh
     data = CompanyCreateRequest(name="Test Company", is_visible=True)
     result = await service.create_company(data, user)
 
-    service.repo.create_company.assert_called_once()
-    assert result.id == company.id
-    assert result.name == company.name
-    assert result.owner_id == company.owner_id
-    assert result.is_visible == company.is_visible
+    service.session.add.assert_called()
+    service.session.commit.assert_called_once()
+    service.session.refresh.assert_called_once()
+
+    assert result.id == company_id
+    assert result.name == data.name
+    assert result.is_visible is True
 
 
 @pytest.mark.asyncio

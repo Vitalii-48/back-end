@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.core.dependencies import get_current_user, get_company_member_service
 from app.models.user import User
-from app.schemas.company_actions import CompanyMembersListResponse, CompanyAdminsListResponse, CompanyMemberResponse
+from app.models.enums import CompanyRole
+from app.schemas.company_actions import (
+    CompanyMembersListResponse,
+    CompanyAdminsListResponse,
+    CompanyMemberResponse)
 from app.services.company_member_service import CompanyMemberService
 
 router = APIRouter(prefix="/company", tags=["Company Members"])
@@ -45,7 +49,7 @@ async def remove_company_member(
 
 
 @router.post(
-    "/{company_id}/members/{user_id}/make-admin",
+    "/{company_id}/admins/{user_id}",
     response_model=CompanyMemberResponse,
 )
 async def make_admin(
@@ -57,10 +61,11 @@ async def make_admin(
     """
     Owner призначає учасника компанії адміністратором.
     """
-    return await member_service.make_admin(company_id, user_id, current_user)
+    return await member_service.change_role(
+        company_id, user_id, CompanyRole.ADMIN, current_user)
 
-@router.post(
-    "/{company_id}/members/{user_id}/remove-admin",
+@router.delete(
+    "/{company_id}/admins/{user_id}",
     response_model=CompanyMemberResponse,
 )
 async def remove_admin(
@@ -71,7 +76,7 @@ async def remove_admin(
     """
     Owner знімає роль адміністратора з учасника, повертаючи його до MEMBER.
     """
-    return await member_service.remove_admin(company_id, user_id, current_user)
+    return await member_service.remove_admin(company_id, user_id, CompanyRole.MEMBER, current_user)
 
 @router.get(
     "/{company_id}/admins",
@@ -81,6 +86,7 @@ async def get_admins(
         company_id: UUID,
         page: int = Query(default=1, ge=1, description="Номер сторінки"),
         per_page: int = Query(default=10, ge=1, le=100, description="Кількість на сторінці"),
+        current_user: User = Depends(get_current_user),
         member_service: CompanyMemberService = Depends(get_company_member_service),
 ):
     """

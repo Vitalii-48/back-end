@@ -105,7 +105,7 @@ Stop the Containers
 - Auth (signin,signup)
 - Users(Get all users, Create a new user, Get user by ID, Update user, Delete user)
 - Companies (Create company, Get all companies with pagination, Get company by ID, Update company, Delete company)
-
+- Company Actions & Admins** (Invitations, Join Requests, Member & Admin role management)
 
 ## Authentication (Авторизація)
 
@@ -290,9 +290,9 @@ DELETE/company/{company_id}/members/me - Leave the company (Owners cannot leave 
 
 DELETE/company/{company_id}/members/{user_id} - Remove a member from the company -> Owner Only
 
-POST/company/{company_id}/members/{user_id}/make-admin - Promote a member to Administrator role -> Owner Only
+POST/company/{company_id}/admins/{user_id} - Promote a member to Administrator role -> Owner Only
 
-POST/company/{company_id}/members/{user_id}/remove-admin - Demote an Administrator back to standard Member -> Owner Only
+POST/company/{company_id}/admins/{user_id} - Demote an Administrator back to standard Member -> Owner Only
 
 GET/company/{company_id}/admins - Get paginated list of active company administrators -> Member / Admin / Owner
 
