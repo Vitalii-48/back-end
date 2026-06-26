@@ -30,10 +30,11 @@ async def get_companies(
 @router.get("/{company_id}", response_model=CompanyDetailResponse)
 async def get_company(
     company_id: UUID,
+    current_user: User | None = Depends(get_current_user),
     company_service: CompanyService = Depends(get_company_service),
 ):
     """Отримання деталей компанії за її ID"""
-    return await company_service.get_company(company_id)
+    return await company_service.get_company(company_id, current_user)
 
 @router.patch("/{company_id}", response_model=CompanyDetailResponse)
 async def update_company(

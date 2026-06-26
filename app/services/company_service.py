@@ -18,6 +18,13 @@ class CompanyService:
 
 
     async def create_company(self, data: CompanyCreateRequest, current_user: User) -> CompanyDetailResponse:
+        existing_company = await self.repo.get_company_by_name(data.name)
+        if existing_company:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Company with name '{data.name}' already exists."
+            )
+
         company = Company(
             name=data.name,
             description=data.description,
@@ -29,12 +36,20 @@ class CompanyService:
         return CompanyDetailResponse.model_validate(created)
 
 
-    async def get_company(self, company_id: UUID) -> Company:
+    async def get_company(self, company_id: UUID, current_user: User | None = None) -> Company:
         company = await self.repo.get_company_by_id(company_id)
         if not company:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Company with id={company_id} not found")
+
+        if not company.is_visible:
+            if current_user is None or company.owner_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Company not found",
+                )
+
         return company
 
     async def update_company(
