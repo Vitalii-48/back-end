@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class AuthService:
-    def __init__(self, db: AsyncSession):
-        self.user_repo = UserRepository(db)
+    def __init__(self, session: AsyncSession):
+        self.user_repo = UserRepository(session)
 
     async def sign_in(self, data: SignInRequest) -> TokenResponse:
         """

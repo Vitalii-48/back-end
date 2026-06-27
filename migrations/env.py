@@ -4,11 +4,13 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 from app.core.config import settings
-from app.models.user import User
+
+
 sys.path.insert(0, str(settings.BASE_DIR))
 
 from app.database.base import Base
-from app.models.user import User
+from app.models.user import User # noqa: F401
+from app.models.company import Company  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

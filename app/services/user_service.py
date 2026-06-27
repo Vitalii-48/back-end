@@ -11,8 +11,8 @@ from app.utils.hashing import hash_password
 logger = logging.getLogger(__name__)
 
 class UserService:
-    def __init__(self, db: AsyncSession):
-        self.repo = UserRepository(db)
+    def __init__(self, session: AsyncSession):
+        self.repo = UserRepository(session)
 
     async def get_all_users(self, page: int, per_page: int) -> tuple[list[User], int]:
         skip = (page - 1) * per_page
@@ -28,7 +28,7 @@ class UserService:
         return user
 
     async def create_user(self, data: SignUpRequest) -> User:
-        # Перевіряємо чи email вже існує (conflict — конфлікт)
+        # Перевіряємо чи email вже існує
         existing = await self.repo.get_by_email(data.email)
         if existing:
             raise HTTPException(

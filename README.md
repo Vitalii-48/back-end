@@ -104,6 +104,7 @@ Stop the Containers
 - Health check (PostgreSQL + Redis status)
 - Auth (signin,signup)
 - Users(Get all users, Create a new user, Get user by ID, Update user, Delete user)
+- Companies (Create company, Get all companies with pagination, Get company by ID, Update company, Delete company)
 
 
 ## Authentication (Авторизація)
@@ -116,7 +117,7 @@ POST /auth/signin
   "password": "yourpassword"
 }
 ```
-Повертає JWT токен.
+Returns a JWT token.
 
 ### Auth0
 POST /auth/auth0
@@ -125,11 +126,119 @@ POST /auth/auth0
   "token": "your_auth0_token"
 }
 ```
-Отримати Auth0 токен: https://romanxeo.github.io/internship-token/
+Get Auth0 token: https://romanxeo.github.io/internship-token/
 
 ### Get current user
 GET /me
-Потребує заголовок: `Authorization: Bearer <token>`
+Required header: `Authorization: Bearer <token>`
+
+
+## Companies (Компанії)
+
+Any authenticated user can create a company and automatically becomes its Owner.
+### Create company
+POST /company/
+Required header: `Authorization: Bearer <token>`
+```json
+{
+  "name": "My Company",
+  "description": "Company description",
+  "is_visible": true
+}
+```
+
+### Get all companies (with pagination)
+GET /company/?page=1&page_size=10
+
+Returns only visible (`is_visible=true`) companies.
+
+### Get company by ID
+GET /company/{company_id}
+
+### Update company
+PATCH /company/{company_id}
+Required header: `Authorization: Bearer <token>`
+Access: Available only to the company Owner.
+Request Body: Send only the fields that need to be updated.
+```json
+{
+  "name": "Updated name"
+}
+```
+
+### Delete company
+DELETE /company/{company_id}
+Required header: `Authorization: Bearer <token>`
+Access: Available only to the company Owner.
+
+
+
+## Company Actions
+
+All endpoints below require:
+
+```http
+Authorization: Bearer <token>
+```
+
+### Invitations
+
+#### Send invitation
+
+Owner sends an invitation to a user:
+POST /company/{company_id}/invitations
+```json
+{
+  "user_id": "user-uuid"
+}
+```
+
+Owner views sent pending invitations:
+GET /company/{company_id}/invitations?page=1&per_page=10
+
+Owner cancels an invitation:
+POST /company/invitations/{request_id}/cancel
+
+User views received invitations:
+GET /company/me/invitations?page=1&per_page=10
+
+User accepts an invitation:
+POST /company/invitations/{request_id}/accept
+
+User declines an invitation:
+POST /company/invitations/{request_id}/decline
+
+### Join Requests
+
+User requests to join a company:
+POST /company/{company_id}/join-requests
+
+User views own pending join requests:
+GET /company/me/join-requests?page=1&per_page=10
+
+User cancels own join request:
+POST /company/join-requests/{request_id}/cancel
+
+Owner views pending join requests:
+GET /company/{company_id}/join-requests?page=1&per_page=10
+
+Owner accepts a join request:
+POST /company/join-requests/{request_id}/accept
+
+Owner declines a join request:
+POST /company/join-requests/{request_id}/decline
+
+### Members
+
+View company members:
+GET /company/{company_id}/members?page=1&per_page=10
+
+User leaves company:
+DELETE /company/{company_id}/members/me
+
+Owner removes a member:
+DELETE /company/{company_id}/members/{user_id}
+
 
 ## Tests
 
