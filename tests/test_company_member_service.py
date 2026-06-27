@@ -66,8 +66,9 @@ async def test_make_admin_success():
         member_id, company_id, CompanyRole.ADMIN
     )
 
-    result = await svc.make_admin(company_id, member_id, FakeUser(owner_id))
-
+    result = await svc.change_role(
+        company_id, member_id, CompanyRole.ADMIN, FakeUser(owner_id)
+    )
     assert result.role == CompanyRole.ADMIN
     svc.member_repo.update_member_role.assert_called_once_with(target, CompanyRole.ADMIN)
 
@@ -78,7 +79,7 @@ async def test_make_admin_company_not_found():
     svc = make_service(company_exists=False)
 
     with pytest.raises(HTTPException) as exc_info:
-        await svc.make_admin(uuid.uuid4(), uuid.uuid4(), FakeUser(uuid.uuid4()))
+        await svc.change_role(uuid.uuid4(), uuid.uuid4(), CompanyRole.ADMIN, FakeUser(uuid.uuid4()))
 
     assert exc_info.value.status_code == 404
     svc.member_repo.get_membership_by_company_and_user.assert_not_called()
@@ -104,7 +105,7 @@ async def test_make_admin_forbidden_for_non_owner():
     svc.member_repo.get_membership_by_company_and_user.side_effect = get_member
 
     with pytest.raises(HTTPException) as exc_info:
-        await svc.make_admin(company_id, target_id, FakeUser(requester_id))
+        await svc.change_role(company_id, target_id, CompanyRole.ADMIN, FakeUser(requester_id))
 
     assert exc_info.value.status_code == 403
 
@@ -128,7 +129,7 @@ async def test_make_admin_target_not_member():
     svc.member_repo.get_membership_by_company_and_user.side_effect = get_member
 
     with pytest.raises(HTTPException) as exc_info:
-        await svc.make_admin(company_id, stranger_id, FakeUser(owner_id))
+        await svc.change_role(company_id, stranger_id, CompanyRole.ADMIN, FakeUser(owner_id))
 
     assert exc_info.value.status_code == 404
 
@@ -145,8 +146,7 @@ async def test_make_admin_cannot_change_owner_role():
     svc.member_repo.get_membership_by_company_and_user.return_value = owner
 
     with pytest.raises(HTTPException) as exc_info:
-        await svc.make_admin(company_id, owner_id, FakeUser(owner_id))
-
+        await svc.change_role(company_id, owner_id, CompanyRole.ADMIN, FakeUser(owner_id))
     assert exc_info.value.status_code == 400
 
 
@@ -170,8 +170,7 @@ async def test_make_admin_already_admin():
     svc.member_repo.get_membership_by_company_and_user.side_effect = get_member
 
     with pytest.raises(HTTPException) as exc_info:
-        await svc.make_admin(company_id, admin_id, FakeUser(owner_id))
-
+        await svc.change_role(company_id, admin_id, CompanyRole.ADMIN, FakeUser(owner_id))
     assert exc_info.value.status_code == 400
 
 
@@ -197,8 +196,9 @@ async def test_remove_admin_success():
         admin_id, company_id, CompanyRole.MEMBER
     )
 
-    result = await svc.remove_admin(company_id, admin_id, FakeUser(owner_id))
-
+    result = await svc.change_role(
+        company_id, admin_id, CompanyRole.MEMBER, FakeUser(owner_id)
+    )
     assert result.role == CompanyRole.MEMBER
     svc.member_repo.update_member_role.assert_called_once_with(admin, CompanyRole.MEMBER)
 
@@ -223,8 +223,7 @@ async def test_remove_admin_user_not_admin():
     svc.member_repo.get_membership_by_company_and_user.side_effect = get_member
 
     with pytest.raises(HTTPException) as exc_info:
-        await svc.remove_admin(company_id, member_id, FakeUser(owner_id))
-
+        await svc.change_role(company_id, member_id, CompanyRole.MEMBER, FakeUser(owner_id))
     assert exc_info.value.status_code == 400
 
 

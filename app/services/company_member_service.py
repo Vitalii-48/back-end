@@ -94,56 +94,17 @@ class CompanyMemberService:
         await self.member_repo.delete_membership(membership)
         logger.info(f"User {current_user.id} left company {company_id}")
 
-    async def make_admin(self, company_id: UUID, user_id: UUID, current_user: User):
+
+    async def change_role(
+            self,
+            company_id: UUID,
+            user_id: UUID,
+            new_role: CompanyRole,
+            current_user: User,
+    ) -> CompanyMember:
         """
-        Бізнес-логіка призначення користувача адміністратором компанії.
-        Доступно тільки для Owner.
-        """
-        # 1. Перевірка існування компанії (Тест: test_make_admin_company_not_found)
-        company = await self.company_repo.get_company_by_id(company_id)
-        if not company:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Company not found"
-            )
-
-        # 2. Перевірка прав ініціатора (Тест: test_make_admin_forbidden_for_non_owner)
-        requester = await self.member_repo.get_membership_by_company_and_user(company_id, current_user.id)
-        if not requester or requester.role != CompanyRole.OWNER:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only company owners can manage administrators"
-            )
-
-        # 3. Перевірка, чи цільовий користувач взагалі є в компанії (Тест: test_make_admin_target_not_member)
-        target_member = await self.member_repo.get_membership_by_company_and_user(company_id, user_id)
-        if not target_member:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User is not a member of this company"
-            )
-
-        # 4. Заборона змінювати роль Owner-а (Тест: test_make_admin_cannot_change_owner_role)
-        if target_member.role == CompanyRole.OWNER:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot change owner role"
-            )
-
-        # 5. Заборона повторного призначення (Тест: test_make_admin_already_admin)
-        if target_member.role == CompanyRole.ADMIN:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is already an administrator"
-            )
-
-        # 6. Виклик "тупого" мутуючого методу репозиторію
-        return await self.member_repo.update_member_role(target_member, CompanyRole.ADMIN)
-
-    async def remove_admin(self, company_id: UUID, user_id: UUID, current_user: User):
-        """
-        Бізнес-логіка зняття адмінських прав з користувача (пониження до MEMBER).
-        Доступно тільки для Owner.
+        Централізований метод зміни ролі учасника.
+        Доступно тільки для Owner. Використовується для призначення/зняття адміна.
         """
         # 1. Перевірка існування компанії
         company = await self.company_repo.get_company_by_id(company_id)
@@ -153,32 +114,41 @@ class CompanyMemberService:
                 detail="Company not found"
             )
 
-        # 2. Перевірка прав ініціатора (має бути OWNER)
-        requester = await self.member_repo.get_membership_by_company_and_user(company_id, current_user.id)
+        # 2. Перевірка прав — тільки Owner може змінювати ролі
+        requester = await self.member_repo.get_membership_by_company_and_user(
+            company_id, current_user.id
+        )
         if not requester or requester.role != CompanyRole.OWNER:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only company owners can manage administrators"
             )
 
-        # 3. Перевірка існування цільового членства
-        target_member = await self.member_repo.get_membership_by_company_and_user(company_id, user_id)
+        # 3. Перевірка що цільовий юзер є учасником компанії
+        target_member = await self.member_repo.get_membership_by_company_and_user(
+            company_id, user_id
+        )
         if not target_member:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User is not a member of this company"
             )
 
-        # 4. Перевірка, чи користувач дійсно є адміном (Тест: test_remove_admin_user_not_admin)
-        if target_member.role != CompanyRole.ADMIN:
+        # 4. Заборона змінювати роль Owner-а
+        if target_member.role == CompanyRole.OWNER:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is not an administrator"
+                detail="Cannot change owner role"
             )
 
-        # 5. Зняття ролі до звичайного MEMBER
-        return await self.member_repo.update_member_role(target_member, CompanyRole.MEMBER)
+        # 5. Заборона встановлювати ту саму роль що вже є
+        if target_member.role == new_role:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"User already has role {new_role.value}"
+            )
 
+        return await self.member_repo.update_member_role(target_member, new_role)
     async def get_admins(self, company_id: UUID, offset: int = 0, limit: int = 10):
         """
         Отримання списку адміністраторів компанії.
