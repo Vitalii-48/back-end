@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import String, Boolean, UUID
+from sqlalchemy import String, Boolean, UUID, DateTime
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from app.database.base import Base
 from app.database.mixins import TimestampMixin
@@ -33,3 +34,10 @@ class User(TimestampMixin, Base):
     company_requests: Mapped[list["CompanyRequest"]] = relationship(
         "CompanyRequest",
         back_populates="user")
+
+    # Поле для відстеження останньої спроби проходження квізу
+    last_quiz_attempt: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        default=None
+    )

@@ -97,7 +97,7 @@ async def test_auth0_sign_in_creates_new_user(auth_service):
 
     # Спочатку користувача немає, потім створюється
     auth_service.user_repo.get_by_email = AsyncMock(return_value=None)
-    auth_service.user_repo.create = AsyncMock(return_value=mock_new_user)
+    auth_service.user_repo.create_result = AsyncMock(return_value=mock_new_user)
 
     with patch(
         "app.services.auth_service.verify_auth0_token",
@@ -106,7 +106,7 @@ async def test_auth0_sign_in_creates_new_user(auth_service):
         result = await auth_service.auth0_sign_in("fake_token")
 
     assert result.access_token is not None
-    auth_service.user_repo.create.assert_called_once()
+    auth_service.user_repo.create_result.assert_called_once()
 
 
 @pytest.mark.asyncio
