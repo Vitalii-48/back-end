@@ -13,28 +13,28 @@ logger = logging.getLogger(__name__)
 
 
 class CompanyRequestRepository:
-    def __init__(self, db_session: AsyncSession):
-        self.db_session = db_session
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
     async def create_request(self, request: CompanyRequest) -> CompanyRequest:
         """Створює INVITE (від Owner-а) або REQUEST (від користувача)."""
-        self.db_session.add(request)
-        await self.db_session.commit()
-        await self.db_session.refresh(request)
+        self.session.add(request)
+        await self.session.commit()
+        await self.session.refresh(request)
         return request
 
     async def update_request(self, request: CompanyRequest) -> CompanyRequest:
         """Оновлює статус заявки (PENDING -> ACCEPTED/DECLINED/CANCELED)."""
-        await self.db_session.commit()
-        await self.db_session.refresh(request)
+        await self.session.commit()
+        await self.session.refresh(request)
         return request
 
     async def delete_request(self, request: CompanyRequest) -> None:
-        await self.db_session.delete(request)
-        await self.db_session.commit()
+        await self.session.delete(request)
+        await self.session.commit()
 
     async def get_request_by_id(self, request_id: UUID) -> CompanyRequest | None:
-        result = await self.db_session.execute(
+        result = await self.session.execute(
             select(CompanyRequest).where(CompanyRequest.id == request_id)
         )
         return result.scalar_one_or_none()
@@ -47,7 +47,7 @@ class CompanyRequestRepository:
         Потрібно перед створенням нової заявки (захист від дублікатів)
         та перед accept/decline/cancel (щоб знайти, що саме змінювати).
         """
-        result = await self.db_session.execute(
+        result = await self.session.execute(
             select(CompanyRequest).where(
                 CompanyRequest.company_id == company_id,
                 CompanyRequest.user_id == user_id,
@@ -66,10 +66,10 @@ class CompanyRequestRepository:
             CompanyRequest.type == RequestType.INVITE,
             CompanyRequest.status == RequestStatus.PENDING,
         )
-        result = await self.db_session.execute(query.offset(skip).limit(limit))
+        result = await self.session.execute(query.offset(skip).limit(limit))
         invitations = list(result.scalars().all())
 
-        total = await self.db_session.scalar(
+        total = await self.session.scalar(
             select(func.count(CompanyRequest.id)).where(
                 CompanyRequest.user_id == user_id,
                 CompanyRequest.type == RequestType.INVITE,
@@ -87,10 +87,10 @@ class CompanyRequestRepository:
             CompanyRequest.type == RequestType.REQUEST,
             CompanyRequest.status == RequestStatus.PENDING,
         )
-        result = await self.db_session.execute(query.offset(skip).limit(limit))
+        result = await self.session.execute(query.offset(skip).limit(limit))
         requests = list(result.scalars().all())
 
-        total = await self.db_session.scalar(
+        total = await self.session.scalar(
             select(func.count(CompanyRequest.id)).where(
                 CompanyRequest.user_id == user_id,
                 CompanyRequest.type == RequestType.REQUEST,
@@ -108,10 +108,10 @@ class CompanyRequestRepository:
             CompanyRequest.type == RequestType.INVITE,
             CompanyRequest.status == RequestStatus.PENDING,
         )
-        result = await self.db_session.execute(query.offset(skip).limit(limit))
+        result = await self.session.execute(query.offset(skip).limit(limit))
         invitations = list(result.scalars().all())
 
-        total = await self.db_session.scalar(
+        total = await self.session.scalar(
             select(func.count(CompanyRequest.id)).where(
                 CompanyRequest.company_id == company_id,
                 CompanyRequest.type == RequestType.INVITE,
@@ -129,10 +129,10 @@ class CompanyRequestRepository:
             CompanyRequest.type == RequestType.REQUEST,
             CompanyRequest.status == RequestStatus.PENDING,
         )
-        result = await self.db_session.execute(query.offset(skip).limit(limit))
+        result = await self.session.execute(query.offset(skip).limit(limit))
         requests = list(result.scalars().all())
 
-        total = await self.db_session.scalar(
+        total = await self.session.scalar(
             select(func.count(CompanyRequest.id)).where(
                 CompanyRequest.company_id == company_id,
                 CompanyRequest.type == RequestType.REQUEST,
