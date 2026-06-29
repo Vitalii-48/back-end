@@ -282,7 +282,9 @@ Owner declines a join request:
 POST /company/join-requests/{request_id}/decline
 
 ### 👥 Members & Administrative Management
-This module handles role-based access control inside companies, distinguishing permissions between Owners, Admins, and Members.
+This module handles role-based access control inside companies, distinguishing permissions between Owners, Admins
+and Members.
+
 Method/Endpoint - DescriptionAccess -> Level
 GET/company/{company_id}/members - Get paginated list of all members (total count included) -> Member / Admin / Owner
 
@@ -342,6 +344,21 @@ Returns the current user's average score within the specified company.
 GET /companies/{company_id}/quiz-workflow/members/{user_id}/average-score
 
 Returns average score of a specific member. Available to Owner/Admin or the user themselves.
+
+
+## Redis Temporary Caching (Task BE #13)
+To ensure secure high-performance data processing and transient tracking,
+detailed quiz interactions are cached temporarily using Redis.
+
+- Lifespan Context Manager: Connection pools open on app startup and execute clean shutdown steps (aclose()) 
+  when Uvicorn processes exit.
+
+- TTL Constraint: Individual question selection models, metadata states,
+  and correct-flag evaluations are compiled into JSON payloads
+  and held under Redis set(ex=...) for exactly 48 hours before auto-deletion.
+
+- Structure Pattern: Keys use string schemas (quiz_attempt:{user_id}:{company_id}:{quiz_id}:{timestamp})
+  enabling pattern matching scans via Redis keys() streams.
 
 
 ## Tests

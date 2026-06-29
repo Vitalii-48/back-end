@@ -2,14 +2,15 @@ from uuid import UUID
 from fastapi import HTTPException, status
 
 from app.schemas.quiz_result import QuizSubmitRequest, QuizSubmitResponse
-
+from app.repositories.quiz_cache_repository import QuizCacheRepository
 
 class QuizWorkflowService:
-    def __init__(self, quiz_repo, quiz_result_repo, member_repo, user_repo):
+    def __init__(self, quiz_repo, quiz_result_repo, member_repo, user_repo, quiz_cache_repo: QuizCacheRepository):
         self._quiz_repo = quiz_repo
         self._quiz_result_repo = quiz_result_repo
         self._member_repo = member_repo
         self._user_repo = user_repo
+        self._quiz_cache_repo = quiz_cache_repo
 
     async def submit_quiz(
             self,
@@ -29,7 +30,7 @@ class QuizWorkflowService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found in this company")
 
         # 3. Юзер є членом компанії?
-        member = await self._member_repo.get_member(company_id=company_id, user_id=user_id)
+        member = await self._member_repo. get_membership_by_company_and_user(company_id=company_id, user_id=user_id)
         if not member:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -43,19 +44,28 @@ class QuizWorkflowService:
         }
 
         correct_answers = 0
+        detailed_answers = []
         for question in quiz.questions:
             correct_ids = {o.id for o in question.options if o.is_correct}
             user_selected = user_answers_map.get(question.id, set())
 
-            # Використовуємо безпечне порівняння
-            if len(correct_ids) > 0 and not (correct_ids ^ user_selected):
+            is_correct = len(correct_ids) > 0 and not (correct_ids ^ user_selected)
+
+            if is_correct:
                 correct_answers += 1
+
+            # Детальна відповідь (detailed answer) по кожному питанню
+            detailed_answers.append({
+                "question_id": str(question.id),
+                "selected_option_ids": [str(oid) for oid in user_selected],
+                "is_correct": is_correct,
+            })
 
         total = len(quiz.questions)
         score = round(correct_answers / total, 4) if total > 0 else 0.0
 
         # 5. Зберегти результат в БД та отримати створений об'єкт моделі
-        result = await self._quiz_result_repo.create_result(
+        await self._quiz_result_repo.create_result(
             user_id=user_id,
             company_id=company_id,
             quiz_id=quiz_id,
@@ -69,6 +79,14 @@ class QuizWorkflowService:
 
         # 7. Збільшити лічильник проходжень
         await self._quiz_repo.increment_frequency(quiz_id)
+
+        # 8. Зберегти детальні відповіді в Redis на 48 годин  ← додай цей блок
+        await self._quiz_cache_repo.save_quiz_attempt(
+            user_id=user_id,
+            company_id=company_id,
+            quiz_id=quiz_id,
+            answers=detailed_answers,
+        )
 
         # Автоматично мапимо модель зі всіма ID та score у Pydantic схему
         is_passed = score >= 0.8  # або будь-який твій поріг (наприклад, > 0)
@@ -99,7 +117,7 @@ class QuizWorkflowService:
         Доступно для owner/admin компанії або самого користувача.
         """
         # 1. Шукаємо того, хто робить запит, у цій компанії
-        requesting_member = await self._member_repo.get_member(
+        requesting_member = await self._member_repo. get_membership_by_company_and_user(
             company_id=company_id,
             user_id=requesting_user_id
         )

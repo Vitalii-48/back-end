@@ -47,6 +47,13 @@ class QuizService:
         quiz = await self.quiz_repo.update_quiz(quiz=quiz, data=data)
         return QuizDetailResponse.model_validate(quiz)
 
+    async def get_quiz_detail(
+            self, quiz_id: UUID, company_id: UUID, user_id: UUID
+    ) -> QuizDetailResponse:
+        await self._ensure_member(user_id=user_id, company_id=company_id)
+        quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
+        return QuizDetailResponse.model_validate(quiz)
+
     async def delete_company_quiz(
         self, quiz_id: UUID, company_id: UUID, user_id: UUID
     ) -> None:
