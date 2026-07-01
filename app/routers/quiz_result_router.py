@@ -47,28 +47,6 @@ async def get_user_average_in_company(
 ):
     """
     Повертає середній бал користувача в межах конкретної компанії.
-    Доступно для owner/admin компанії.
-    """
-    return await quiz_result_service.get_user_average_in_company(
-        user_id=user_id,
-        company_id=company_id,
-        requesting_user_id=current_user.id,
-    )
-
-@router.get(
-    "/members/{user_id}/average-score",
-    response_model=float,
-    status_code=status.HTTP_200_OK,
-    summary="Середній бал конкретного юзера в цій компанії",
-)
-async def get_user_average_in_company(
-    company_id: UUID,
-    user_id: UUID,
-    current_user=Depends(get_current_user),
-    quiz_result_service: QuizWorkflowService = Depends(get_quiz_result_service),
-):
-    """
-    Повертає середній бал користувача в межах конкретної компанії.
     Доступно для owner/admin компанії (Таска BE #10).
     """
     return await quiz_result_service.get_user_average_in_company(

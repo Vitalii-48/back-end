@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException, status
 
+from app.models.enums import CompanyRole
 from app.schemas.quiz_result import QuizSubmitRequest, QuizSubmitResponse
 
 
@@ -29,7 +30,7 @@ class QuizWorkflowService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found in this company")
 
         # 3. Юзер є членом компанії?
-        member = await self._member_repo.get_member(company_id=company_id, user_id=user_id)
+        member = await self._member_repo.get_membership_by_company_and_user(company_id=company_id, user_id=user_id)
         if not member:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -55,7 +56,7 @@ class QuizWorkflowService:
         score = round(correct_answers / total, 4) if total > 0 else 0.0
 
         # 5. Зберегти результат в БД та отримати створений об'єкт моделі
-        result = await self._quiz_result_repo.create_result(
+        await self._quiz_result_repo.create_result(
             user_id=user_id,
             company_id=company_id,
             quiz_id=quiz_id,
@@ -112,7 +113,7 @@ class QuizWorkflowService:
 
         # 2. Перевіряємо права (Якщо не адмін/оунер і не перевіряє сам себе — відмовляємо)
         # Якщо у тебе використовуються Enum, заміни тут рядки на CompanyRole.ADMIN тощо
-        if requesting_member.role not in ["admin", "owner"] and requesting_user_id != user_id:
+        if requesting_member.role not in (CompanyRole.ADMIN, CompanyRole.OWNER) and requesting_user_id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only company admins or owners can view other members' scores"
