@@ -54,6 +54,28 @@ async def get_quizzes(
     )
 
 
+@router.get(
+    "/{quiz_id}",
+    response_model=QuizDetailResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Отримати деталі квізу",
+)
+async def get_quiz(
+    company_id: UUID,
+    quiz_id: UUID,
+    current_user=Depends(get_current_user),
+    quiz_service: QuizService = Depends(get_quiz_service),
+):
+    """
+    Повертає повну інформацію про квіз включно з питаннями та варіантами відповідей.
+    Доступно для будь-якого члена (member — учасник) компанії.
+    """
+    return await quiz_service.get_quiz_detail(
+        quiz_id=quiz_id,
+        company_id=company_id,
+        user_id=current_user.id,
+    )
+
 @router.put(
     "/{quiz_id}",
     response_model=QuizDetailResponse,

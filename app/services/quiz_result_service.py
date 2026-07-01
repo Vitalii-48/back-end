@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException, status
 
+from app.models.enums import CompanyRole
 from app.schemas.quiz_result import QuizSubmitRequest, QuizSubmitResponse
 from app.repositories.quiz_cache_repository import QuizCacheRepository
 
@@ -130,7 +131,7 @@ class QuizWorkflowService:
 
         # 2. Перевіряємо права (Якщо не адмін/оунер і не перевіряє сам себе — відмовляємо)
         # Якщо у тебе використовуються Enum, заміни тут рядки на CompanyRole.ADMIN тощо
-        if requesting_member.role not in ["admin", "owner"] and requesting_user_id != user_id:
+        if requesting_member.role not in (CompanyRole.ADMIN, CompanyRole.OWNER) and requesting_user_id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only company admins or owners can view other members' scores"

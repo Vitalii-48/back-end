@@ -6,7 +6,6 @@ from uuid import UUID
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import CompanyRole
 from app.models.company_actions import CompanyMember
 from app.models.enums import CompanyRole
 
@@ -98,9 +97,9 @@ class CompanyMemberRepository:
             .offset(offset)
             .limit(limit)
         )
-        result = await self.db_session.execute(query)
+        result = await self.session.execute(query)
         admins = list(result.scalars().all())
-        total = await self.db_session.scalar(
+        total = await self.session.scalar(
             select(func.count(CompanyMember.id)).where(
                 CompanyMember.company_id == company_id,
                 CompanyMember.role == CompanyRole.ADMIN,
@@ -118,6 +117,6 @@ class CompanyMemberRepository:
 
         # Оскільки об'єкт уже прив'язаний до сесії (ми дістали його раніше),
         # SQLAlchemy автоматично відстежує зміни (Unit of Work pattern).
-        await self.db_session.commit()
-        await self.db_session.refresh(member)
+        await self.session.commit()
+        await self.session.refresh(member)
         return member
