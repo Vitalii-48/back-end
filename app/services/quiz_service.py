@@ -55,6 +55,14 @@ class QuizService:
         logger.info(f"Видалення квізу {quiz_id} користувачем {user_id}")
         await self.quiz_repo.delete_quiz(quiz)
 
+    async def get_quiz_detail(
+            self, quiz_id: UUID, company_id: UUID, user_id: UUID
+    ) -> QuizDetailResponse:
+        """Повертає деталі квізу з питаннями та варіантами відповідей."""
+        await self._ensure_member(user_id=user_id, company_id=company_id)
+        quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
+        return QuizDetailResponse.model_validate(quiz)
+
     # ── Приватні методи (private methods) ──
 
     async def _ensure_admin(self, user_id: UUID, company_id: UUID) -> None:
