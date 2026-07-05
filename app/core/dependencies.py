@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException,  Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import get_current_user_id
 from app.database.db_postgres import get_db_postgres
+
 from app.models.user import User
 
 from app.repositories.user_repository import UserRepository
@@ -19,6 +20,11 @@ from app.repositories.company_member_repository import CompanyMemberRepository
 from app.services.company_request_service import CompanyRequestService
 from app.services.quiz_result_service import QuizWorkflowService
 from app.services.quiz_service import QuizService
+
+from redis.asyncio import Redis
+
+from app.services.export_service import ExportService
+from app.repositories.company_repository import CompanyRepository
 
 
 
@@ -90,4 +96,30 @@ async def get_quiz_result_service(
         member_repo=CompanyMemberRepository(session),
         user_repo=UserRepository(session),
         quiz_cache_repo=QuizCacheRepository(redis),
+    )
+
+
+
+
+def get_company_repository(db: AsyncSession = Depends(get_db_postgres)) -> CompanyRepository:
+    return CompanyRepository(db)
+
+
+def get_membership_repository(db: AsyncSession = Depends(get_db_postgres)) -> CompanyMemberRepository:
+    return CompanyMemberRepository(db)
+
+
+def get_redis_repository(redis: Redis = Depends(get_redis)) -> QuizCacheRepository:
+    return QuizCacheRepository(redis)
+
+
+def get_export_service(
+        redis_repository: QuizCacheRepository = Depends(get_redis_repository),
+        company_repository: CompanyRepository = Depends(get_company_repository),
+    membership_repository: CompanyMemberRepository = Depends(get_membership_repository),
+) -> ExportService:
+    return ExportService(
+        redis_repository=redis_repository,
+        company_repository=company_repository,
+        membership_repository=membership_repository,
     )
