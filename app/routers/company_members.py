@@ -13,7 +13,7 @@ from app.schemas.company_actions import (
     CompanyMemberResponse)
 from app.services.company_member_service import CompanyMemberService
 
-router = APIRouter(prefix="/company", tags=["Company Members"])
+router = APIRouter(prefix="/companies", tags=["Company Members"])
 
 
 @router.get("/{company_id}/members", response_model=CompanyMembersListResponse)
@@ -76,7 +76,7 @@ async def remove_admin(
     """
     Owner знімає роль адміністратора з учасника, повертаючи його до MEMBER.
     """
-    return await member_service.remove_admin(company_id, user_id, CompanyRole.MEMBER, current_user)
+    return await member_service.change_role(company_id, user_id, CompanyRole.MEMBER, current_user)
 
 @router.get(
     "/{company_id}/admins",

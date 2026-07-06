@@ -13,7 +13,7 @@ from app.schemas.company_actions import (
 )
 from app.services.company_request_service import CompanyRequestService
 
-router = APIRouter(prefix="/company", tags=["Company Requests"])
+router = APIRouter(prefix="/companies", tags=["Company Requests"])
 
 
 # ───────────────────── Створення заявок ─────────────────────
