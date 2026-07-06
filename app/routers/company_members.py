@@ -13,7 +13,7 @@ from app.schemas.company_actions import (
     CompanyMemberResponse)
 from app.services.company_member_service import CompanyMemberService
 
-router = APIRouter(prefix="/company", tags=["Company Members"])
+router = APIRouter(prefix="/companies", tags=["Company Members"])
 
 
 @router.get("/{company_id}/members", response_model=CompanyMembersListResponse)
