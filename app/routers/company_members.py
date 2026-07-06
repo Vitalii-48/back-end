@@ -13,7 +13,7 @@ from app.schemas.company_actions import (
     CompanyMemberResponse)
 from app.services.company_member_service import CompanyMemberService
 
-router = APIRouter(prefix="/company", tags=["Company Members"])
+router = APIRouter(prefix="/companies", tags=["Company Members"])
 
 
 @router.get("/{company_id}/members", response_model=CompanyMembersListResponse)
@@ -27,7 +27,7 @@ async def get_company_members(
     return await member_service.get_members(company_id, page, per_page)
 
 
-@router.delete("/{company_id}/members/leave", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{company_id}/members/me", status_code=status.HTTP_204_NO_CONTENT)
 async def leave_company(
     company_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -76,7 +76,7 @@ async def remove_admin(
     """
     Owner знімає роль адміністратора з учасника, повертаючи його до MEMBER.
     """
-    return await member_service.remove_admin(company_id, user_id, CompanyRole.MEMBER, current_user)
+    return await member_service.change_role(company_id, user_id, CompanyRole.MEMBER, current_user)
 
 @router.get(
     "/{company_id}/admins",
@@ -92,5 +92,9 @@ async def get_admins(
     """
     Повертає список адміністраторів компанії з пагінацією.
     """
-    return await member_service.get_admins(company_id, page, per_page)
-
+    return await member_service.get_admins(
+        company_id=company_id,
+        current_user=current_user,
+        offset=page,
+        limit=per_page,
+    )

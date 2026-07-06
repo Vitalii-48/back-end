@@ -1,11 +1,12 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, status, Query
 
+from app.models.user import User
 from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest, QuizzesListResponse, QuizDetailResponse
 from app.services.quiz_service import QuizService
 from app.core.dependencies import get_current_user, get_quiz_service
 
-router = APIRouter(prefix="/company/{company_id}/quizzes", tags=["Quizzes"])
+router = APIRouter(prefix="/companise/{company_id}/quizzes", tags=["Quizzes"])
 
 
 @router.post(
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/company/{company_id}/quizzes", tags=["Quizzes"])
 async def create_quiz(
     company_id: UUID,
     data: QuizCreateRequest,
-    current_user = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     quiz_service: QuizService = Depends(get_quiz_service),
 ):
     """
@@ -39,7 +40,7 @@ async def get_quizzes(
     company_id: UUID,
     page: int = Query(default=1, ge=1, description="Номер сторінки"),
     size: int = Query(default=10, ge=1, le=100, description="Кількість елементів на сторінці"),
-    current_user = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     quiz_service: QuizService = Depends(get_quiz_service),
 ):
     """
@@ -63,7 +64,7 @@ async def get_quizzes(
 async def get_quiz(
     company_id: UUID,
     quiz_id: UUID,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     quiz_service: QuizService = Depends(get_quiz_service),
 ):
     """
@@ -76,7 +77,7 @@ async def get_quiz(
         user_id=current_user.id,
     )
 
-@router.put(
+@router.patch(
     "/{quiz_id}",
     response_model=QuizDetailResponse,
     status_code=status.HTTP_200_OK,
@@ -86,7 +87,7 @@ async def update_quiz(
     company_id: UUID,
     quiz_id: UUID,
     data: QuizUpdateRequest,
-    current_user = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     quiz_service: QuizService = Depends(get_quiz_service),
 ):
     """
@@ -106,7 +107,7 @@ async def update_quiz(
 async def delete_quiz(
     company_id: UUID,
     quiz_id: UUID,
-    current_user = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     quiz_service: QuizService = Depends(get_quiz_service),
 ):
     """

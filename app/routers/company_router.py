@@ -7,7 +7,7 @@ from app.models.user import User
 from app.core.dependencies import get_current_user, get_company_service
 from app.services.company_service import CompanyService
 
-router = APIRouter(prefix="/company", tags=["Company"])
+router = APIRouter(prefix="/companies", tags=["Company"])
 
 @router.post("/", response_model=CompanyDetailResponse, status_code=status.HTTP_201_CREATED)
 async def create_company(
