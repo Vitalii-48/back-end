@@ -76,7 +76,7 @@ async def remove_admin(
     """
     Owner знімає роль адміністратора з учасника, повертаючи його до MEMBER.
     """
-    return await member_service.remove_admin(company_id, user_id, CompanyRole.MEMBER, current_user)
+    return await member_service.change_role(company_id, user_id, CompanyRole.MEMBER, current_user)
 
 @router.get(
     "/{company_id}/admins",
