@@ -77,6 +77,7 @@ async def get_quiz(
         user_id=current_user.id,
     )
 
+
 @router.patch(
     "/{quiz_id}",
     response_model=QuizDetailResponse,

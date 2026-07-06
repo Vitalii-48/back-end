@@ -92,9 +92,5 @@ async def get_admins(
     """
     Повертає список адміністраторів компанії з пагінацією.
     """
-    return await member_service.get_admins(
-        company_id=company_id,
-        current_user=current_user,
-        offset=page,
-        limit=per_page,
-    )
+    return await member_service.get_admins(company_id, current_user, page, per_page)
+

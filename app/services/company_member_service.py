@@ -177,6 +177,16 @@ class CompanyMemberService:
                 detail="You are not a member of this company"
             )
 
+        # 2. Запитувач є членом компанії?
+        requester = await self.member_repo.get_membership_by_company_and_user(
+            company_id, current_user.id
+        )
+        if not requester:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not a member of this company"
+            )
+
         # Розпаковуємо (unpack) tuple у дві окремі змінні
         admins, total = await self.member_repo.get_admins_by_company_id(
             company_id, offset, limit
