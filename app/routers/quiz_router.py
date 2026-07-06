@@ -64,7 +64,7 @@ async def get_quizzes(
 async def get_quiz(
     company_id: UUID,
     quiz_id: UUID,
-    current_user: User=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     quiz_service: QuizService = Depends(get_quiz_service),
 ):
     """
@@ -76,6 +76,7 @@ async def get_quiz(
         company_id=company_id,
         user_id=current_user.id,
     )
+
 
 @router.patch(
     "/{quiz_id}",
