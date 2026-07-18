@@ -17,3 +17,8 @@ class CompanyRole(str, enum.Enum):
     OWNER = "OWNER"          # Власник компанії
     MEMBER = "MEMBER"        # Звичайний учасник
     ADMIN = "ADMIN"          #Адміністратор
+
+
+class NotificationStatus(str, enum.Enum):
+    UNREAD = "unread"       # Нове, не прочитане користувачем сповіщення
+    READ = "read"           # Сповіщення, яке користувач уже переглянув

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.company import Company
     from app.models.company_actions import CompanyMember, CompanyRequest
-
+    from app.models.notification import Notification
 
 class User(TimestampMixin, Base):
     __tablename__ = "users"
@@ -35,9 +35,7 @@ class User(TimestampMixin, Base):
         "CompanyRequest",
         back_populates="user")
 
-    # Поле для відстеження останньої спроби проходження квізу
-    last_quiz_attempt: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-        default=None
-    )
+    #  Сповіщення користувача з правильним каскадним видаленням
+    notifications: Mapped[list["Notification"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan")

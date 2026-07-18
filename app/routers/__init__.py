@@ -1,7 +1,7 @@
 # app/routers/__init__.py
 
 from fastapi import APIRouter
-from app.routers import health, auth, users, company_router
+from app.routers import health, auth, users, company_router, notification_router
 from app.routers import company_members, company_requests, quiz_router, quiz_result_router
 from app.routers import export
 from app.routers import export, analytics_router
@@ -21,6 +21,7 @@ api_router.include_router(quiz_router.router)
 api_router.include_router(quiz_result_router.router)
 api_router.include_router(export.router)
 api_router.include_router(analytics_router.router)
+api_router.include_router(notification_router.router)
 
 # 3. Визначаємо публічний інтерфейс модуля
 __all__ = ["api_router"]

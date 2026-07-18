@@ -7,6 +7,7 @@ from app.database.db_postgres import get_db_postgres
 
 from app.models.user import User
 from app.repositories.analytics_repository import AnalyticsRepository
+from app.repositories.notification_repository import NotificationRepository
 
 from app.repositories.user_repository import UserRepository
 from app.repositories.quiz_repository import QuizRepository
@@ -14,6 +15,7 @@ from app.repositories.quiz_result_repository import QuizResultRepository
 from app.repositories.quiz_cache_repository import QuizCacheRepository
 from app.services.analytics_service import AnalyticsService
 from app.services.auth_service import AuthService
+from app.services.notification_service import NotificationService
 
 from app.services.user_service import UserService
 from app.services.company_service import CompanyService
@@ -80,11 +82,16 @@ def get_redis(request: Request):
 
 
 async def get_quiz_service(
-        session: AsyncSession = Depends(get_db_postgres),
+    session: AsyncSession = Depends(get_db_postgres),
 ) -> QuizService:
-    quiz_repo = QuizRepository(session)
-    member_repo = CompanyMemberRepository(session)
-    return QuizService(quiz_repo=quiz_repo, member_repo=member_repo)
+    return QuizService(
+        quiz_repo=QuizRepository(session),
+        member_repo=CompanyMemberRepository(session),
+        company_repo=CompanyRepository(session),
+        notification_service=NotificationService(
+            NotificationRepository(session)
+        ),
+    )
 
 
 async def get_quiz_result_service(
@@ -98,8 +105,6 @@ async def get_quiz_result_service(
         user_repo=UserRepository(session),
         quiz_cache_repo=QuizCacheRepository(redis),
     )
-
-
 
 
 def get_company_repository(db: AsyncSession = Depends(get_db_postgres)) -> CompanyRepository:
@@ -134,3 +139,10 @@ async def get_analytics_service(
         company_repository=CompanyRepository(session),
         quiz_repository=QuizRepository(session),
     )
+
+
+async def get_notification_service(
+        session: AsyncSession = Depends(get_db_postgres)
+) -> NotificationService:
+    repository = NotificationRepository(session)
+    return NotificationService(repository)

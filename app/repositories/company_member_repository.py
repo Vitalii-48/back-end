@@ -83,6 +83,10 @@ class CompanyMemberRepository:
         )
         return members, total or 0
 
+    async def get_all_member_user_ids(self, company_id: UUID) -> list[UUID]:
+        stmt = select(CompanyMember.user_id).where(CompanyMember.company_id == company_id)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def get_admins_by_company_id(self, company_id: UUID, offset: int = 0, limit: int = 10) -> tuple[list[CompanyMember], int]:
         """

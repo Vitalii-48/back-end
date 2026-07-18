@@ -2,29 +2,60 @@
 from uuid import UUID
 from fastapi import HTTPException, status
 
+from app.repositories.company_repository import CompanyRepository
 from app.repositories.quiz_repository import QuizRepository
 from app.repositories.company_member_repository import CompanyMemberRepository
 from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest, QuizzesListResponse, QuizDetailResponse, \
     QuizShortResponse
 from app.models.enums import CompanyRole
 from app.core.logger import setup_logger
+from app.services.notification_service import NotificationService
 
 logger = setup_logger(__name__)
 
 
 class QuizService:
-    def __init__(self, quiz_repo: QuizRepository, member_repo: CompanyMemberRepository):
+    def __init__(
+            self,
+            quiz_repo: QuizRepository,
+            member_repo: CompanyMemberRepository,
+            company_repo: CompanyRepository,
+            notification_service: NotificationService
+    ):
         self.quiz_repo = quiz_repo
         self.member_repo = member_repo
+        self.company_repo = company_repo
+        self.notification_service = notification_service
 
     # ── Публічні методи (public methods) ──
 
     async def create_company_quiz(
-        self, company_id: UUID, data: QuizCreateRequest, user_id: UUID
+            self, company_id: UUID, data: QuizCreateRequest, user_id: UUID
     ) -> QuizDetailResponse:
+        # 1. Перевірка прав (вже є)
         await self._ensure_admin(user_id=user_id, company_id=company_id)
+
         logger.info(f"Створення квізу '{data.title}' для компанії {company_id}")
+
+        # 2. Отримуємо компанію, щоб дізнатися її назву для сповіщення
+        company = await self.company_repo.get_company_by_id(company_id)
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        # 3. Створення квізу в базі (вже є)
         quiz = await self.quiz_repo.create_quiz(company_id=company_id, data=data)
+
+        # 4. Швидке отримання ID усіх учасників компанії
+        member_ids = await self.member_repo.get_all_member_user_ids(company_id)
+
+        # 5. Масова розсилка сповіщень через сервіс сповіщень
+        if member_ids:
+            await self.notification_service.notify_company_about_new_quiz(
+                member_ids=member_ids,
+                company_name=company.name,
+                quiz_title=quiz.title
+            )
+
         return QuizDetailResponse.model_validate(quiz)
 
     async def get_company_quizzes_list(
