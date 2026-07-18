@@ -11,10 +11,10 @@ class Quiz(Base):
     """ Квіз — головна сутність. Належить до компанії і має список питань. """
     __tablename__ = 'quizzes'
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    company_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    company_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     frequency: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationships (зв'язки) — SQLAlchemy підтягує пов'язані об'єкти
@@ -31,8 +31,8 @@ class QuizQuestion(Base):
     """ Питання — належить до квізу. Має список варіантів відповіді. """
     __tablename__ = 'quiz_questions'
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    quiz_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    quiz_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     quiz: Mapped["Quiz"] = relationship(back_populates="questions")
 
@@ -53,8 +53,8 @@ class QuizAnswerOption(Base):
     """
     __tablename__ = "quiz_answer_options"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    question_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("quiz_questions.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    question_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("quiz_questions.id", ondelete="CASCADE"), nullable=False)
     text: Mapped[str] = mapped_column(String(255), nullable=False)
     is_correct: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 

@@ -75,13 +75,10 @@ class QuizWorkflowService:
             score=score,
         )
 
-        # 6. Оновити час останньої спроби користувача
-        await self._user_repo.update_last_attempt(user_id)
-
-        # 7. Збільшити лічильник проходжень
+        # 6. Збільшити лічильник проходжень
         await self._quiz_repo.increment_frequency(quiz_id)
 
-        # 8. Зберегти детальні відповіді в Redis на 48 годин  ← додай цей блок
+        # 7. Зберегти детальні відповіді в Redis на 48 годин  ← додай цей блок
         await self._quiz_cache_repo.save_quiz_attempt(
             user_id=user_id,
             company_id=company_id,
