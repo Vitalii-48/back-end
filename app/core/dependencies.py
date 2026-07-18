@@ -6,11 +6,13 @@ from app.core.security import get_current_user_id
 from app.database.db_postgres import get_db_postgres
 
 from app.models.user import User
+from app.repositories.analytics_repository import AnalyticsRepository
 
 from app.repositories.user_repository import UserRepository
 from app.repositories.quiz_repository import QuizRepository
 from app.repositories.quiz_result_repository import QuizResultRepository
 from app.repositories.quiz_cache_repository import QuizCacheRepository
+from app.services.analytics_service import AnalyticsService
 from app.services.auth_service import AuthService
 
 from app.services.user_service import UserService
@@ -77,7 +79,6 @@ def get_redis(request: Request):
     return request.app.state.redis
 
 
-# Функцію-залежність для квізів:
 async def get_quiz_service(
         session: AsyncSession = Depends(get_db_postgres),
 ) -> QuizService:
@@ -122,4 +123,14 @@ def get_export_service(
         redis_repository=redis_repository,
         company_repository=company_repository,
         membership_repository=membership_repository,
+    )
+
+
+async def get_analytics_service(
+    session: AsyncSession = Depends(get_db_postgres),
+) -> AnalyticsService:
+    return AnalyticsService(
+        analytics_repository=AnalyticsRepository(session),
+        company_repository=CompanyRepository(session),
+        quiz_repository=QuizRepository(session),
     )

@@ -118,6 +118,7 @@ class QuizRepository:
 
         return quizzes, total
 
+
     async def delete_quiz(self, quiz: Quiz) -> None:
         """Видалити квіз (cascade видалить питання та відповіді автоматично)"""
         await self.session.delete(quiz)
@@ -129,3 +130,13 @@ class QuizRepository:
         if quiz:
             quiz.frequency += 1
             await self.session.commit()
+
+
+    async def get_by_ids(self, quiz_ids: list[UUID]) -> list[Quiz]:
+        """Дістає одразу декілька квізів по списку ID (один SQL-запит)."""
+        if not quiz_ids:
+            return []
+
+        stmt = select(Quiz).where(Quiz.id.in_(quiz_ids))
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
