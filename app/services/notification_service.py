@@ -25,15 +25,16 @@ class NotificationService:
         await self.notification_repository.create_bulk(member_ids, message)
 
     async def get_user_notifications(
-            self, user_id: uuid.UUID, skip: int = 0, limit: int = 10) -> tuple[Sequence[Notification], int]:
+            self, user_id: uuid.UUID, page: int = 1, per_page: int = 10) -> tuple[Sequence[Notification], int]:
         """
         Отримує список сповіщень користувача разом із їхньою загальною кількістю.
         Повністю сумісний зі схемою NotificationListResponse.
         """
+        skip = (page - 1) * per_page
         return await self.notification_repository.get_user_notifications_with_count(
             user_id=user_id,
             skip=skip,
-            limit=limit)
+            limit=per_page)
 
     async def mark_as_read(self, notification_id: uuid.UUID, current_user_id: uuid.UUID) -> Notification:
         """

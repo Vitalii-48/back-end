@@ -59,15 +59,15 @@ class QuizService:
         return QuizDetailResponse.model_validate(quiz)
 
     async def get_company_quizzes_list(
-        self, company_id: UUID, user_id: UUID, page: int, size: int
+        self, company_id: UUID, user_id: UUID, page: int, per_page: int
     ) -> QuizzesListResponse:
         await self._ensure_member(user_id=user_id, company_id=company_id)
-        skip = (page - 1) * size
+        skip = (page - 1) * per_page
         quizzes, total = await self.quiz_repo.get_company_quizzes(
-            company_id=company_id, skip=skip, limit=size
+            company_id=company_id, skip=skip, limit=per_page
         )
         quizzes = [QuizShortResponse.model_validate(q) for q in quizzes]
-        return QuizzesListResponse(quizzes=quizzes, total=total, page=page,  per_page=size)
+        return QuizzesListResponse(quizzes=quizzes, total=total, page=page, per_page=per_page)
 
     async def update_company_quiz(
         self, quiz_id: UUID, company_id: UUID, data: QuizUpdateRequest, user_id: UUID
@@ -93,13 +93,6 @@ class QuizService:
         logger.info(f"Видалення квізу {quiz_id} користувачем {user_id}")
         await self.quiz_repo.delete_quiz(quiz)
 
-    async def get_quiz_detail(
-            self, quiz_id: UUID, company_id: UUID, user_id: UUID
-    ) -> QuizDetailResponse:
-        """Повертає деталі квізу з питаннями та варіантами відповідей."""
-        await self._ensure_member(user_id=user_id, company_id=company_id)
-        quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
-        return QuizDetailResponse.model_validate(quiz)
 
     # ── Приватні методи (private methods) ──
 

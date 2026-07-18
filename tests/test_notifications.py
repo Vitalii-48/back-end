@@ -81,7 +81,7 @@ class TestGetUserNotifications:
         fake_notifications = [make_notification(user_id=user_id), make_notification(user_id=user_id)]
         notification_repo_mock.get_user_notifications_with_count.return_value = (fake_notifications, 2)
 
-        notifications, total = await service.get_user_notifications(user_id=user_id, skip=0, limit=5)
+        notifications, total = await service.get_user_notifications(user_id=user_id, page=1, per_page=5)
 
         notification_repo_mock.get_user_notifications_with_count.assert_awaited_once_with(
             user_id=user_id, skip=0, limit=5

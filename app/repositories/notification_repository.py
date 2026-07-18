@@ -24,7 +24,7 @@ class NotificationRepository:
             for user_id in user_ids
         ]
         self.session.add_all(notifications)
-        await self.session.flush()  # Синхронізуємо з БД в межах однієї транзакції
+        await self.session.commit()
 
     async def get_user_notifications_with_count(
         self, user_id: uuid.UUID, skip: int = 0, limit: int = 10

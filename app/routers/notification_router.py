@@ -12,16 +12,16 @@ router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
 @router.get("/", response_model=NotificationListResponse)
 async def get_my_notifications(
-        skip: int = Query(0, ge=0, description="Кількість елементів для пропуску"),
-        limit: int = Query(10, ge=1, le=100, description="Кількість елементів на сторінці"),
+        page: int = Query(1, ge=1, description="Номер сторінки"),
+        per_page: int = Query(10, ge=1, le=100, description="Кількість елементів на сторінці"),
         current_user: User = Depends(get_current_user),
         service: NotificationService = Depends(get_notification_service),
 ):
 
     notifications_list, total_count = await service.get_user_notifications(
         user_id=current_user.id,
-        skip=skip,
-        limit=limit)
+        page=page,
+        per_page=per_page)
 
     return NotificationListResponse.model_validate({
         "notifications": notifications_list,
