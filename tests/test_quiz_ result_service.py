@@ -149,7 +149,6 @@ async def test_submit_quiz_all_correct():
     assert result.total_questions_count == 1
     assert result.is_passed is True
     service._quiz_result_repo.create_result.assert_called_once()
-    service._user_repo.update_last_attempt.assert_called_once()
     service._quiz_repo.increment_frequency.assert_called_once()
     service._quiz_cache_repo.save_quiz_attempt.assert_called_once()
 

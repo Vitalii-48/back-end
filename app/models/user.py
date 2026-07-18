@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Boolean, UUID, DateTime
+from sqlalchemy import String, Boolean, UUID
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from app.database.base import Base
 from app.database.mixins import TimestampMixin

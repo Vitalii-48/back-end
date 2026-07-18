@@ -1,4 +1,4 @@
-﻿"""remove last_quiz_attempt from users
+"""remove last_quiz_attempt from users
 
 Revision ID: aca5c3a844c1
 Revises: 068480dbef53
