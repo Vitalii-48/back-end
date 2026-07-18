@@ -20,7 +20,8 @@ class Notification(Base, TimestampMixin):
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
         nullable=False
     )
     message: Mapped[str] = mapped_column(String, nullable=False)
@@ -28,7 +29,6 @@ class Notification(Base, TimestampMixin):
         Enum(NotificationStatus, name="notification_status"),
         default=NotificationStatus.UNREAD,
         nullable=False,
-        index=True
     )
 
     user: Mapped["User"] = relationship(back_populates="notifications")
