@@ -39,7 +39,7 @@ def make_notification(notification_id=None, user_id=None, status=NotificationSta
 # ============================================================
 
 class TestNotifyCompanyAboutNewQuiz:
-    async def test_calls_repo_create_bulk_with_all_member_ids(self, service, notification_repo_mock):
+    async def test_notify_company_about_new_quiz_success(self, service, notification_repo_mock):
         member_ids = [uuid4(), uuid4(), uuid4()]
 
         await service.notify_company_about_new_quiz(
@@ -56,7 +56,7 @@ class TestNotifyCompanyAboutNewQuiz:
         assert "Python Basics" in passed_message
         assert "Test Co" in passed_message
 
-    async def test_does_nothing_when_no_members(self, service, notification_repo_mock):
+    async def test_notify_company_about_new_quiz_empty_members(self, service, notification_repo_mock):
         """
         Якщо список учасників порожній -- сервіс виходить одразу через `if not member_ids: return`
         і НЕ звертається до репозиторію. Це навмисна оптимізація в реальному коді,
@@ -76,7 +76,7 @@ class TestNotifyCompanyAboutNewQuiz:
 # ============================================================
 
 class TestGetUserNotifications:
-    async def test_returns_notifications_and_total_from_repo(self, service, notification_repo_mock):
+    async def test_get_user_notifications_success(self, service, notification_repo_mock):
         user_id = uuid4()
         fake_notifications = [make_notification(user_id=user_id), make_notification(user_id=user_id)]
         notification_repo_mock.get_user_notifications_with_count.return_value = (fake_notifications, 2)
@@ -89,7 +89,7 @@ class TestGetUserNotifications:
         assert notifications == fake_notifications
         assert total == 2
 
-    async def test_uses_default_pagination_values(self, service, notification_repo_mock):
+    async def test_get_user_notifications_defaults(self, service, notification_repo_mock):
         """Перевіряємо дефолтні skip/limit, якщо їх не передали явно."""
         user_id = uuid4()
         notification_repo_mock.get_user_notifications_with_count.return_value = ([], 0)
@@ -106,13 +106,8 @@ class TestGetUserNotifications:
 # ============================================================
 
 class TestMarkAsRead:
-    async def test_marks_own_notification_as_read(self, service, notification_repo_mock):
-        """
-        Мутація статусу (UNREAD -> READ) відбувається всередині РЕПОЗИТОРІЮ,
-        а не сервісу -- тут репозиторій замокано, тому реальна мутація не виконується.
-        Перевіряємо відповідальність САМЕ сервісу: (1) правильний виклик репозиторію,
-        (2) повернення того, що повернув репозиторій.
-        """
+    async def test_mark_as_read_success(self, service, notification_repo_mock):
+        """Перевіряємо, що сервіс правильно викликає repo.mark_as_read і повертає його результат."""
         user_id = uuid4()
         notification = make_notification(user_id=user_id, status=NotificationStatus.UNREAD)
         already_read = make_notification(
@@ -127,7 +122,7 @@ class TestMarkAsRead:
         assert result is already_read
         assert result.status == NotificationStatus.READ
 
-    async def test_raises_404_when_notification_not_found(self, service, notification_repo_mock):
+    async def test_mark_as_read_not_found(self, service, notification_repo_mock):
         """404 перед 403: якщо сповіщення взагалі не існує."""
         notification_repo_mock.get_by_id.return_value = None
 
@@ -136,7 +131,7 @@ class TestMarkAsRead:
 
         assert exc.value.status_code == 404
 
-    async def test_raises_403_when_notification_belongs_to_another_user(self, service, notification_repo_mock):
+    async def test_mark_as_read_forbidden(self, service, notification_repo_mock):
         owner_id = uuid4()
         other_user_id = uuid4()
         notification = make_notification(user_id=owner_id)

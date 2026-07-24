@@ -570,8 +570,24 @@ alembic upgrade head
 ```
 
 
-## Tests
+## Testing
 
+Tests are split into two categories:
+
+- `tests/unit/` — unit tests for the service layer, using `AsyncMock` instead of a real database. Fast, no DB/Redis required.
+- `tests/integration/` — integration tests against real HTTP endpoints (e.g. health check). Requires the app running with DB and Redis connected.
+
+### Run all tests
 ```bash
-python -m pytest tests/ -v
+pytest
+```
+
+### Run only unit tests
+```bash
+pytest tests/unit
+```
+
+### Run only integration tests
+```bash
+pytest tests/integration
 ```

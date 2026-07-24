@@ -46,7 +46,8 @@ class SchedulerRepository:
                     QuizResult.id == None,          # Ті, хто не мав спроб за 24 години
                     CompanyMember.role != CompanyRole.OWNER
                 )
-            )        )
+            )
+        )
 
         result = await self.session.execute(stmt)
         return result.all()
