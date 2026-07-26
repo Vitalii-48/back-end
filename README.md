@@ -591,3 +591,27 @@ pytest tests/unit
 ```bash
 pytest tests/integration
 ```
+
+
+## AWS Infrastructure (BE #19)
+
+The project is deployed on AWS with two managed databases, in preparation for production deployment.
+
+### PostgreSQL — Amazon RDS
+- **Instance:** db.t4g.micro (Free tier)
+- **Engine:** PostgreSQL 18.3
+- **Region:** eu-north-1 (Stockholm)
+- **Public access:** Yes (temporary, for local development)
+- **Security group:** internship-postgres-sg — allows inbound traffic on port 5432 from an allowed IP address
+
+### Redis — Amazon ElastiCache
+- **Node type:** cache.t4g.micro (Free tier)
+- **Cluster mode:** Disabled (1 shard, 0 replicas)
+- **Region:** eu-north-1 (Stockholm)
+- **Encryption in transit:** Required (TLS)
+- **Security group:** internship-postgres-sg — allows inbound traffic on port 6379
+
+ **Note:** ElastiCache does not support public access. It will only become reachable once the application is deployed inside VPC
+
+### Environment variables
+See `.env.sample` for the full list of required variables (POSTGRES_*, REDIS_*).
