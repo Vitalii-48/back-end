@@ -600,14 +600,14 @@ The project is deployed on AWS with two managed databases, in preparation for pr
 ### PostgreSQL — Amazon RDS
 - **Instance:** db.t4g.micro (Free tier)
 - **Engine:** PostgreSQL 18.3
-- **Region:** eu-north-1 (Stockholm)
+- **Region:** eu-west-1 (Ireland)
 - **Public access:** Yes (temporary, for local development)
 - **Security group:** internship-postgres-sg — allows inbound traffic on port 5432 from an allowed IP address
 
 ### Redis — Amazon ElastiCache
 - **Node type:** cache.t4g.micro (Free tier)
 - **Cluster mode:** Disabled (1 shard, 0 replicas)
-- **Region:** eu-north-1 (Stockholm)
+- **Region:** eu-west-1 (Ireland)
 - **Encryption in transit:** Required (TLS)
 - **Security group:** internship-postgres-sg — allows inbound traffic on port 6379
 

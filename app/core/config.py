@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     # Redis
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
+    REDIS_SSL: bool = False
 
     # logging
     LOG_LEVEL: str = "INFO"
@@ -56,7 +57,8 @@ class Settings(BaseSettings):
 
     @property
     def REDIS_URL(self) -> str:
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
+        scheme = "rediss" if self.REDIS_SSL else "redis"
+        return f"{scheme}://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
 
 @lru_cache()
 def get_settings() -> Settings:
