@@ -640,4 +640,4 @@ Each run:
 
 ### Access
 
-Swagger UI: `http://<EC2_PUBLIC_IP>:8000/docs`
+Swagger UI: `http://18.201.205.195:8000/docs`
