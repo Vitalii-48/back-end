@@ -13,3 +13,6 @@
 # Cache
 __pycache__/
 .pytest_cache/
+
+# Personal secrets notes (not used by app or docker)
+.env.secrets-notes
