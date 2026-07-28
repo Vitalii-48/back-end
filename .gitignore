@@ -7,6 +7,9 @@
 # Secret file
 .env
 
+# SSH keys
+*.pem
+
 # Cache
 __pycache__/
 .pytest_cache/
