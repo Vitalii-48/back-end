@@ -1,7 +1,10 @@
-import uuid
+# app/repositories/notification_repository.py
 from typing import Sequence
+from uuid import UUID
+
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.notification import Notification
 from app.models.enums import NotificationStatus
 
@@ -10,7 +13,7 @@ class NotificationRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_bulk(self, user_ids: list[uuid.UUID], message: str) -> None:
+    async def create_bulk(self, user_ids: list[UUID], message: str) -> None:
         """
         Ефективно створює сповіщення для багатьох користувачів одночасно.
         Запобігає проблемі N+1 запитів при масовій розсилці (тригер нового квізу).
@@ -45,7 +48,7 @@ class NotificationRepository:
         await self.session.commit()
 
     async def get_user_notifications_with_count(
-        self, user_id: uuid.UUID, skip: int = 0, limit: int = 10
+        self, user_id: UUID, skip: int = 0, limit: int = 10
     ) -> tuple[Sequence[Notification], int]:
         """
         Отримує всі сповіщення користувача та їхню загальну кількість
@@ -67,9 +70,12 @@ class NotificationRepository:
 
         return notifications, total
 
-    async def get_by_id(self, notification_id: uuid.UUID) -> Notification | None:
+    async def get_by_id(self, notification_id: UUID) -> Notification | None:
         """Знаходить одне сповіщення за його ID."""
-        return await self.session.get(Notification, notification_id)
+        result = await self.session.execute(
+            select(Notification).where(Notification.id == notification_id)
+        )
+        return result.scalar_one_or_none()
 
     async def mark_as_read(self, notification: Notification) -> Notification:
         """Переводить статус сповіщення в READ."""
