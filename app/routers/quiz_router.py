@@ -1,10 +1,15 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, status, Query
+from fastapi import UploadFile, File
+
+from app.core.dependencies import get_current_user, get_quiz_service
+from app.core.dependencies import get_quiz_import_service
 
 from app.models.user import User
+from app.schemas.quiz_import import ImportReport
 from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest, QuizzesListResponse, QuizDetailResponse
 from app.services.quiz_service import QuizService
-from app.core.dependencies import get_current_user, get_quiz_service
+from app.services.quiz_import_service import QuizImportService
 
 router = APIRouter(prefix="/companies/{company_id}/quizzes", tags=["Quizzes"])
 
@@ -114,4 +119,27 @@ async def delete_quiz(
     """
     await quiz_service.delete_company_quiz(
         quiz_id=quiz_id, company_id=company_id, user_id=current_user.id
+    )
+
+
+@router.post(
+    "/import",
+    response_model=ImportReport,
+    status_code=status.HTTP_200_OK,
+    summary="Імпортувати квізи з Excel-файлу",
+)
+async def import_quizzes(
+    company_id: UUID,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    quiz_import_service: QuizImportService = Depends(get_quiz_import_service),
+):
+    """
+    Імпортує квізи з Excel-файлу: створює нові або оновлює існуючі
+    (за співпадінням назви квізу в межах компанії).
+    Доступно тільки для OWNER або ADMIN цієї компанії.
+    """
+    file_content = await file.read()
+    return await quiz_import_service.import_quizzes(
+        company_id=company_id, file_content=file_content, user_id=current_user.id
     )

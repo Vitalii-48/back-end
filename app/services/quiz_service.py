@@ -7,9 +7,10 @@ from app.repositories.quiz_repository import QuizRepository
 from app.repositories.company_member_repository import CompanyMemberRepository
 from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest, QuizzesListResponse, QuizDetailResponse, \
     QuizShortResponse
-from app.models.enums import CompanyRole
 from app.core.logger import setup_logger
 from app.services.notification_service import NotificationService
+from app.services.permissions import ensure_admin, ensure_member
+
 
 logger = setup_logger(__name__)
 
@@ -98,27 +99,11 @@ class QuizService:
 
     async def _ensure_admin(self, user_id: UUID, company_id: UUID) -> None:
         """Кидає 403 якщо юзер не є Owner або Admin компанії"""
-        membership = await self.member_repo.get_membership_by_company_and_user(
-            user_id=user_id, company_id=company_id
-        )
-        if not membership or membership.role not in (CompanyRole.OWNER, CompanyRole.ADMIN):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="У вас немає прав для цієї дії.",
-            )
+        await ensure_admin(self.member_repo, user_id, company_id)
 
     async def _ensure_member(self, user_id: UUID, company_id: UUID) -> None:
         """Кидає 403 якщо user не є учасником компанії."""
-        membership = await self.member_repo.get_membership_by_company_and_user(
-            user_id=user_id,
-            company_id=company_id,
-        )
-
-        if not membership:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not a member of this company.",
-            )
+        await ensure_member(self.member_repo, user_id, company_id)
 
     async def _get_quiz_or_404(self, quiz_id: UUID, company_id: UUID):
         """Кидає 404 якщо квіз не знайдено або не належить компанії"""
