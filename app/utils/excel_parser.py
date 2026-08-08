@@ -13,7 +13,6 @@ from app.schemas.quiz_import import (
 EXPECTED_HEADERS = [
     "quiz_title",
     "quiz_description",
-    "frequency",
     "question_title",
     "answer_text",
     "is_correct",
@@ -61,31 +60,29 @@ def parse_excel_to_quizzes(
             (
                 quiz_title_raw,
                 quiz_description_raw,
-                frequency_raw,
                 question_title_raw,
                 answer_text_raw,
                 is_correct_raw,
             ) = row
 
-            quiz_title = str(quiz_title_raw).strip()
-            question_title = str(question_title_raw).strip()
-            answer_text = str(answer_text_raw).strip()
+            quiz_title = str(quiz_title_raw).strip() if quiz_title_raw is not None else ""
+            question_title = str(question_title_raw).strip() if question_title_raw is not None else ""
+            answer_text = str(answer_text_raw).strip() if answer_text_raw is not None else ""
 
-            try:
-                frequency = int(frequency_raw)
-            except (ValueError, TypeError):
-                errors.append(QuizValidationError(
-                    quiz_title=quiz_title or "unknown",
-                    row_number=row_number,
-                    message=f"Invalid frequency value: {frequency_raw!r}",
-                ))
+            if not quiz_title or not question_title or not answer_text:
+                errors.append(
+                    QuizValidationError(
+                        quiz_title=quiz_title or "unknown",
+                        row_number=row_number,
+                        message="Quiz title, question title, and answer text must not be empty",
+                    )
+                )
                 continue
 
             if quiz_title not in quizzes:
                 quizzes[quiz_title] = ParsedQuizData(
                     title=quiz_title,
                     description=str(quiz_description_raw or "").strip(),
-                    frequency=frequency,
                     questions=[],
                     source_row_start=row_number,
                 )

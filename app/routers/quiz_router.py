@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, HTTPException
 from fastapi import UploadFile, File
 
 from app.core.dependencies import get_current_user, get_quiz_service
@@ -12,6 +12,11 @@ from app.services.quiz_service import QuizService
 from app.services.quiz_import_service import QuizImportService
 
 router = APIRouter(prefix="/companies/{company_id}/quizzes", tags=["Quizzes"])
+
+MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024  # 5 МБ у байтах
+ALLOWED_IMPORT_CONTENT_TYPE = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 
 
 @router.post(
@@ -139,7 +144,20 @@ async def import_quizzes(
     (за співпадінням назви квізу в межах компанії).
     Доступно тільки для OWNER або ADMIN цієї компанії.
     """
-    file_content = await file.read()
+    if file.content_type != ALLOWED_IMPORT_CONTENT_TYPE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Файл повинен бути у форматі .xlsx",
+        )
+
+    file_content = bytearray()
+    while chunk := await file.read(1024 * 1024):
+        file_content.extend(chunk)
+        if len(file_content) > MAX_IMPORT_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Файл занадто великий. Максимум 5 МБ",
+            )
     return await quiz_import_service.import_quizzes(
         company_id=company_id, file_content=file_content, user_id=current_user.id
     )

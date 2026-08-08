@@ -160,7 +160,6 @@ class QuizRepository:
         quiz = Quiz(
             title=quiz_data.title,
             description=quiz_data.description,
-            frequency=quiz_data.frequency,
             company_id=company_id,
         )
         for question_data in quiz_data.questions:
@@ -190,7 +189,6 @@ class QuizRepository:
         """
         quiz.title = quiz_data.title
         quiz.description = quiz_data.description
-        quiz.frequency = quiz_data.frequency
 
         quiz.questions.clear()
 

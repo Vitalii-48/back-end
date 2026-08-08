@@ -15,7 +15,6 @@ class ParsedQuestionData(BaseModel):
 class ParsedQuizData(BaseModel):
     title: str = Field(min_length=1)
     description: str = ""
-    frequency: int = Field(ge=0)
     questions: list[ParsedQuestionData] = Field(default_factory=list)
     source_row_start: int | None = None
 
