@@ -18,10 +18,10 @@ def make_excel_bytes(rows: list[tuple]) -> bytes:
 
 def test_parse_groups_questions_and_answers():
     content = make_excel_bytes([
-        ("Quiz A", "desc", 24, "Q1", "Answer 1", True),
-        ("Quiz A", "desc", 24, "Q1", "Answer 2", False),
-        ("Quiz A", "desc", 24, "Q2", "Answer 1", False),
-        ("Quiz A", "desc", 24, "Q2", "Answer 2", True),
+        ("Quiz A", "desc", "Q1", "Answer 1", True),
+        ("Quiz A", "desc", "Q1", "Answer 2", False),
+        ("Quiz A", "desc", "Q2", "Answer 1", False),
+        ("Quiz A", "desc", "Q2", "Answer 2", True),
     ])
 
     quizzes, errors = parse_excel_to_quizzes(content)
@@ -33,13 +33,13 @@ def test_parse_groups_questions_and_answers():
     assert len(quizzes[0].questions[0].answers) == 2
 
 
-def test_parse_reports_invalid_frequency_without_crashing():
+def test_parse_reports_empty_required_field_without_crashing():
     content = make_excel_bytes([
-        ("Quiz A", "desc", "not-a-number", "Q1", "Answer 1", True),
+        (None, "desc", "Q1", "Answer 1", True),
     ])
 
     quizzes, errors = parse_excel_to_quizzes(content)
 
     assert quizzes == []
     assert len(errors) == 1
-    assert "frequency" in errors[0].message.lower()
+    assert "must not be empty" in errors[0].message.lower()
