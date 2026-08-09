@@ -2,7 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [develop,  BE-#21-Import-Data-Excel]
+    branches: [develop, BE-#21-Import-Data-Excel]
 
 jobs:
   test:
@@ -20,9 +20,14 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run tests
+        env:
+          SECRET_KEY: test-secret-key-not-for-production
+          AUTH0_DOMAIN: test.auth0.local
+          AUTH0_API_AUDIENCE: https://test-api.local
         run: pytest
 
   deploy:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
