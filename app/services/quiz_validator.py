@@ -3,6 +3,7 @@ from app.schemas.quiz_import import ParsedQuizData, QuizValidationError
 
 MIN_QUESTIONS = 2
 MIN_ANSWERS = 2
+MAX_ANSWERS = 4
 
 
 class QuizValidator:
@@ -29,6 +30,12 @@ class QuizValidator:
                     quiz_title=quiz_data.title,
                     row_number=quiz_data.source_row_start,
                     message=f"Question '{question.title}' must have at least {MIN_ANSWERS} answers",
+                ))
+            elif len(question.answers) > MAX_ANSWERS:
+                errors.append(QuizValidationError(
+                    quiz_title=quiz_data.title,
+                    row_number=quiz_data.source_row_start,
+                    message=f"Question '{question.title}' must have at most {MAX_ANSWERS} answers, got {len(question.answers)}",
                 ))
             if not any(a.is_correct for a in question.answers):
                 errors.append(QuizValidationError(

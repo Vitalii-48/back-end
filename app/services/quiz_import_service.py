@@ -1,5 +1,9 @@
 # app/services/quiz_import_service.py
 import uuid
+from zipfile import BadZipFile
+
+from fastapi import HTTPException,status
+from openpyxl.utils.exceptions import InvalidFileException
 
 from app.repositories.quiz_repository import QuizRepository
 from app.repositories.company_member_repository import CompanyMemberRepository
@@ -26,7 +30,13 @@ class QuizImportService:
         logger.info(f"Імпорт квізів для компанії {company_id} користувачем {user_id}")
 
         # 2. Парсинг файлу
-        parsed_quizzes, parse_errors = parse_excel_to_quizzes(file_content)
+        try:
+            parsed_quizzes, parse_errors = parse_excel_to_quizzes(file_content)
+        except (BadZipFile, InvalidFileException) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Файл пошкоджений або не є коректним Excel-файлом (.xlsx)",
+            ) from exc
         report = ImportReport(errors=list(parse_errors))
 
         # 3. Валідація + 4. Збереження для кожного квіза
