@@ -1,4 +1,5 @@
 # app/services/quiz_import_service.py
+import asyncio
 import uuid
 from zipfile import BadZipFile
 
@@ -31,7 +32,10 @@ class QuizImportService:
 
         # 2. Парсинг файлу
         try:
-            parsed_quizzes, parse_errors = parse_excel_to_quizzes(file_content)
+            parsed_quizzes, parse_errors = await asyncio.to_thread(
+                parse_excel_to_quizzes,
+                file_content,
+            )
         except (BadZipFile, InvalidFileException) as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

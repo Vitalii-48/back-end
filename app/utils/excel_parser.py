@@ -41,67 +41,67 @@ def parse_excel_to_quizzes(
     Не кидає виняток через одну погану клітинку — пропускає рядок.
     """
     workbook = load_workbook(filename=BytesIO(file_content), read_only=True, data_only=True)
-    worksheet = workbook.active
-    rows = worksheet.iter_rows(values_only=True)
+    try:
+        worksheet = workbook.active
+        rows = worksheet.iter_rows(values_only=True)
 
-    headers = next(rows, None)
-    if headers is None or list(headers) != EXPECTED_HEADERS:
-        workbook.close()
-        raise ValueError(f"Invalid Excel headers. Expected: {EXPECTED_HEADERS}")
+        headers = next(rows, None)
+        if headers is None or list(headers) != EXPECTED_HEADERS:
+            raise ValueError(f"Invalid Excel headers. Expected: {EXPECTED_HEADERS}")
 
-    quizzes: dict[str, ParsedQuizData] = {}
-    errors: list[QuizValidationError] = []
+        quizzes: dict[str, ParsedQuizData] = {}
+        errors: list[QuizValidationError] = []
 
-    for row_number, row in enumerate(rows, start=2):
-        if all(value is None for value in row):
-            continue
-
-        try:
-            (
-                quiz_title_raw,
-                quiz_description_raw,
-                question_title_raw,
-                answer_text_raw,
-                is_correct_raw,
-            ) = row
-
-            quiz_title = str(quiz_title_raw).strip() if quiz_title_raw is not None else ""
-            question_title = str(question_title_raw).strip() if question_title_raw is not None else ""
-            answer_text = str(answer_text_raw).strip() if answer_text_raw is not None else ""
-
-            if not quiz_title or not question_title or not answer_text:
-                errors.append(
-                    QuizValidationError(
-                        quiz_title=quiz_title or "unknown",
-                        row_number=row_number,
-                        message="Quiz title, question title, and answer text must not be empty",
-                    )
-                )
+        for row_number, row in enumerate(rows, start=2):
+            if all(value is None for value in row):
                 continue
 
-            if quiz_title not in quizzes:
-                quizzes[quiz_title] = ParsedQuizData(
-                    title=quiz_title,
-                    description=str(quiz_description_raw or "").strip(),
-                    questions=[],
-                    source_row_start=row_number,
+            try:
+                (
+                    quiz_title_raw,
+                    quiz_description_raw,
+                    question_title_raw,
+                    answer_text_raw,
+                    is_correct_raw,
+                ) = row
+
+                quiz_title = str(quiz_title_raw).strip() if quiz_title_raw is not None else ""
+                question_title = str(question_title_raw).strip() if question_title_raw is not None else ""
+                answer_text = str(answer_text_raw).strip() if answer_text_raw is not None else ""
+
+                if not quiz_title or not question_title or not answer_text:
+                    errors.append(
+                        QuizValidationError(
+                            quiz_title=quiz_title or "unknown",
+                            row_number=row_number,
+                            message="Quiz title, question title, and answer text must not be empty",
+                        )
+                    )
+                    continue
+
+                if quiz_title not in quizzes:
+                    quizzes[quiz_title] = ParsedQuizData(
+                        title=quiz_title,
+                        description=str(quiz_description_raw or "").strip(),
+                        questions=[],
+                        source_row_start=row_number,
+                    )
+
+                quiz = quizzes[quiz_title]
+                question = next((q for q in quiz.questions if q.title == question_title), None)
+                if question is None:
+                    question = ParsedQuestionData(title=question_title, answers=[])
+                    quiz.questions.append(question)
+
+                question.answers.append(
+                    ParsedAnswerData(text=answer_text, is_correct=_parse_bool(is_correct_raw))
                 )
 
-            quiz = quizzes[quiz_title]
-            question = next((q for q in quiz.questions if q.title == question_title), None)
-            if question is None:
-                question = ParsedQuestionData(title=question_title, answers=[])
-                quiz.questions.append(question)
+            except Exception as exc:  # noqa: BLE001 — навмисно широкий catch на рівні рядка
+                errors.append(QuizValidationError(
+                    quiz_title="unknown", row_number=row_number, message=f"Failed to parse row: {exc}",
+                ))
 
-            question.answers.append(
-                ParsedAnswerData(text=answer_text, is_correct=_parse_bool(is_correct_raw))
-            )
-
-        except Exception as exc:  # noqa: BLE001 — навмисно широкий catch на рівні рядка
-            errors.append(QuizValidationError(
-                quiz_title="unknown", row_number=row_number, message=f"Failed to parse row: {exc}",
-            ))
-            continue
-
-    workbook.close()
-    return list(quizzes.values()), errors
+        return list(quizzes.values()), errors
+    finally:
+        workbook.close()
