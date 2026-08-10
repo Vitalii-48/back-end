@@ -636,3 +636,36 @@ Each run:
 ### Access
 
 Swagger UI: `http://18.201.205.195:8000/docs`
+
+
+## Quiz Import from Excel (BE #21)
+
+Allows company administrators to bulk import quizzes from `.xlsx` files.
+
+### Excel Format
+
+Required columns:
+
+```text
+quiz_title
+quiz_description
+question_title
+answer_text
+is_correct
+```
+
+The importer:
+
+* Validates Excel headers and row data
+* Groups rows into quizzes, questions, and answers
+* Creates new quizzes or updates existing ones
+* Collects row-level validation errors
+* Uses `asyncio.to_thread()` to prevent blocking the FastAPI event loop
+* Saves changes in a single transaction with rollback on database errors
+
+### Testing
+
+```bash
+pytest tests/unit/test_excel
+pytest tests/unit/test_quiz_import_service.py
+```
