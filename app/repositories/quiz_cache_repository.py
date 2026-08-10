@@ -50,13 +50,21 @@ class QuizCacheRepository:
         else:
             pattern = f"quiz_attempt:{user_id}:*"
 
-        keys = await self._redis.keys(pattern)
+        keys = []
+
+        async for key in self._redis.scan_iter(match=pattern):
+            keys.append(key)
+
+        if not keys:
+            return []
+
+        raw_values = await self._redis.mget(keys)
 
         results = []
-        for key in keys:
-            raw = await self._redis.get(key)  # raw — сирі дані (raw data)
+        for raw in raw_values:
             if raw:
-                results.append(json.loads(raw))  # json.loads — str → dict
+                raw_str = raw.decode("utf-8") if isinstance(raw, bytes) else raw
+                results.append(json.loads(raw_str))     # json.loads — str → dict
 
         return results
 
