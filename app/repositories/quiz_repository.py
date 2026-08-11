@@ -1,7 +1,7 @@
 # app/repositories/quiz_repository.py
 from uuid import UUID
 import logging
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.models.quiz import Quiz, QuizQuestion, QuizAnswerOption
@@ -125,13 +125,13 @@ class QuizRepository:
         await self.session.delete(quiz)
         await self.session.commit()
 
-
     async def increment_frequency(self, quiz_id: UUID) -> None:
-        quiz = await self.get_quiz_by_id(quiz_id)
-        if quiz:
-            quiz.frequency += 1
-            await self.session.commit()
-
+        await self.session.execute(
+            update(Quiz)
+            .where(Quiz.id == quiz_id)
+            .values(frequency=Quiz.frequency + 1)
+        )
+        await self.session.commit()
 
     async def get_by_ids(self, quiz_ids: list[UUID]) -> list[Quiz]:
         """Дістає одразу декілька квізів по списку ID (один SQL-запит)."""
