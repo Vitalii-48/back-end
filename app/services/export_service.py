@@ -39,7 +39,7 @@ class ExportService:
         export_format: Literal["json", "csv"],
     ):
         # 1. Компанія існує? (404 — Not Found, "не знайдено")
-        company = await self.company_repository.get_by_id(company_id)
+        company = await self.company_repository.get_company_by_id(company_id)
         if not company:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -48,7 +48,7 @@ class ExportService:
 
         # 2. Якщо вказаний target_user_id — він член компанії? (теж 404)
         if target_user_id:
-            membership = await self.membership_repository.get_member(
+            membership = await self.membership_repository.get_membership_by_company_and_user(
                 company_id=company_id, user_id=target_user_id
             )
             if not membership:
@@ -58,7 +58,7 @@ class ExportService:
                 )
 
         # 3. Перевіряємо права (403 — Forbidden, "заборонено")
-        requester_mem = await self.membership_repository.get_member(
+        requester_mem = await self.membership_repository.get_membership_by_company_and_user(
             company_id=company_id, user_id=requester_id
         )
         if not requester_mem or requester_mem.role not in (

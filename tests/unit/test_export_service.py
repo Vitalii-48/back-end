@@ -95,7 +95,7 @@ class TestExportCompanyQuizResults:
 
     @pytest.mark.asyncio
     async def test_raises_404_if_company_not_found(self, export_service):
-        export_service.company_repository.get_by_id.return_value = None
+        export_service.company_repository.get_company_by_id.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
             await export_service.export_company_quiz_results(
@@ -111,8 +111,8 @@ class TestExportCompanyQuizResults:
 
     @pytest.mark.asyncio
     async def test_raises_404_if_target_user_not_a_member(self, export_service):
-        export_service.company_repository.get_by_id.return_value = MagicMock()
-        export_service.membership_repository.get_member.return_value = None
+        export_service.company_repository.get_company_by_id.return_value = MagicMock()
+        export_service.membership_repository.get_membership_by_company_and_user.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
             await export_service.export_company_quiz_results(
@@ -128,10 +128,10 @@ class TestExportCompanyQuizResults:
 
     @pytest.mark.asyncio
     async def test_raises_403_if_requester_has_no_membership(self, export_service):
-        export_service.company_repository.get_by_id.return_value = MagicMock()
+        export_service.company_repository.get_company_by_id.return_value = MagicMock()
         # target_user_id не переданий, тому другу перевірку пропускаємо,
         # одразу переходимо до перевірки requester_mem
-        export_service.membership_repository.get_member.return_value = None
+        export_service.membership_repository.get_membership_by_company_and_user.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
             await export_service.export_company_quiz_results(
@@ -149,8 +149,8 @@ class TestExportCompanyQuizResults:
         fake_member = MagicMock()
         fake_member.role = CompanyRole.MEMBER
 
-        export_service.company_repository.get_by_id.return_value = MagicMock()
-        export_service.membership_repository.get_member.return_value = fake_member
+        export_service.company_repository.get_company_by_id.return_value = MagicMock()
+        export_service.membership_repository.get_membership_by_company_and_user.return_value = fake_member
 
         with pytest.raises(HTTPException) as exc_info:
             await export_service.export_company_quiz_results(
@@ -170,8 +170,8 @@ class TestExportCompanyQuizResults:
         owner_member.role = CompanyRole.OWNER
         fake_data = [{"user_id": "u1", "answers": []}]
 
-        export_service.company_repository.get_by_id.return_value = MagicMock()
-        export_service.membership_repository.get_member.return_value = owner_member
+        export_service.company_repository.get_company_by_id.return_value = MagicMock()
+        export_service.membership_repository.get_membership_by_company_and_user.return_value = owner_member
         export_service.redis_repository.get_attempts_by_pattern.return_value = fake_data
 
         result = await export_service.export_company_quiz_results(
@@ -190,8 +190,8 @@ class TestExportCompanyQuizResults:
         admin_member = MagicMock()
         admin_member.role = CompanyRole.ADMIN
 
-        export_service.company_repository.get_by_id.return_value = MagicMock()
-        export_service.membership_repository.get_member.return_value = admin_member
+        export_service.company_repository.get_company_by_id.return_value = MagicMock()
+        export_service.membership_repository.get_membership_by_company_and_user.return_value = admin_member
         export_service.redis_repository.get_attempts_by_pattern.return_value = []
 
         result = await export_service.export_company_quiz_results(
