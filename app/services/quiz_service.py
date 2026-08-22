@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import HTTPException, status
 
 from app.repositories.company_repository import CompanyRepository
+from app.models import Company
+from app.repositories.company_repository import CompanyRepository
 from app.repositories.quiz_repository import QuizRepository
 from app.repositories.company_member_repository import CompanyMemberRepository
 from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest, QuizzesListResponse, QuizDetailResponse, \
@@ -33,8 +35,8 @@ class QuizService:
             self, company_id: UUID, data: QuizCreateRequest, user_id: UUID
     ) -> QuizDetailResponse:
         # 1. Перевірка прав (вже є)
+        await self._get_company_or_404(company_id=company_id)
         await self._ensure_admin(user_id=user_id, company_id=company_id)
-
         logger.info(f"Створення квізу '{data.title}' для компанії {company_id}")
 
         # 2. Отримуємо компанію, щоб дізнатися її назву для сповіщення
@@ -61,6 +63,7 @@ class QuizService:
     async def get_company_quizzes_list(
         self, company_id: UUID, user_id: UUID, page: int, per_page: int
     ) -> QuizzesListResponse:
+        await self._get_company_or_404(company_id=company_id)
         await self._ensure_member(user_id=user_id, company_id=company_id)
         skip = (page - 1) * per_page
         quizzes, total = await self.quiz_repo.get_company_quizzes(
@@ -72,6 +75,7 @@ class QuizService:
     async def update_company_quiz(
         self, quiz_id: UUID, company_id: UUID, data: QuizUpdateRequest, user_id: UUID
     ) -> QuizDetailResponse:
+        await self._get_company_or_404(company_id=company_id)
         await self._ensure_admin(user_id=user_id, company_id=company_id)
         quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
         logger.info(f"Оновлення квізу {quiz_id} користувачем {user_id}")
@@ -88,13 +92,32 @@ class QuizService:
     async def delete_company_quiz(
         self, quiz_id: UUID, company_id: UUID, user_id: UUID
     ) -> None:
+        await self._get_company_or_404(company_id=company_id)
         await self._ensure_admin(user_id=user_id, company_id=company_id)
         quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
         logger.info(f"Видалення квізу {quiz_id} користувачем {user_id}")
         await self.quiz_repo.delete_quiz(quiz)
 
+    async def get_quiz_detail(
+            self, quiz_id: UUID, company_id: UUID, user_id: UUID
+    ) -> QuizDetailResponse:
+        """Повертає деталі квізу з питаннями та варіантами відповідей."""
+        await self._get_company_or_404(company_id=company_id)
+        await self._ensure_member(user_id=user_id, company_id=company_id)
+        quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
+        return QuizDetailResponse.model_validate(quiz)
 
     # ── Приватні методи (private methods) ──
+
+    async def _get_company_or_404(self, company_id: UUID) -> Company:
+        """Кидає 404 якщо компанія не знайдена. Завжди викликається ПЕРЕД перевіркою прав (403)."""
+        company = await self.company_repo.get_company_by_id(company_id)
+        if not company:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Компанію не знайдено.",
+            )
+        return company
 
     async def _ensure_admin(self, user_id: UUID, company_id: UUID) -> None:
         """Кидає 403 якщо юзер не є Owner або Admin компанії"""
@@ -104,7 +127,7 @@ class QuizService:
         if not membership or membership.role not in (CompanyRole.OWNER, CompanyRole.ADMIN):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="У вас немає прав для цієї дії.",
+                detail="You do not have permission to perform this action.",
             )
 
     async def _ensure_member(self, user_id: UUID, company_id: UUID) -> None:
@@ -126,6 +149,6 @@ class QuizService:
         if not quiz or quiz.company_id != company_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Квіз не знайдено або він не належить цій компанії.",
+                detail="The quiz was not found or does not belong to this company..",
             )
         return quiz
