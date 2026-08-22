@@ -76,6 +76,7 @@ def make_quiz_payload():
 def make_service():
     quiz_repo = AsyncMock()
     member_repo = AsyncMock()
+    company_repo = AsyncMock()
 
     create_quiz_mock = AsyncMock()
     get_company_quizzes_mock = AsyncMock()
@@ -94,6 +95,7 @@ def make_service():
     service = QuizService(
         quiz_repo=quiz_repo,
         member_repo=member_repo,
+        company_repo=company_repo,
     )
 
     return service, {

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import get_current_user_id
 from app.database.db_postgres import get_db_postgres
 from app.models.user import User
+from app.repositories.company_repository import CompanyRepository
 
 from app.repositories.user_repository import UserRepository
 from app.repositories.quiz_repository import QuizRepository
@@ -77,7 +78,12 @@ async def get_quiz_service(
 ) -> QuizService:
     quiz_repo = QuizRepository(session)
     member_repo = CompanyMemberRepository(session)
-    return QuizService(quiz_repo=quiz_repo, member_repo=member_repo)
+    company_repo = CompanyRepository(session)
+    return QuizService(
+        quiz_repo=quiz_repo,
+        member_repo=member_repo,
+        company_repo=company_repo,
+    )
 
 
 async def get_quiz_result_service(
