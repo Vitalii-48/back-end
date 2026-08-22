@@ -7,6 +7,7 @@ from app.database.db_postgres import get_db_postgres
 
 from app.models.user import User
 from app.repositories.analytics_repository import AnalyticsRepository
+from app.repositories.company_repository import CompanyRepository
 
 from app.repositories.user_repository import UserRepository
 from app.repositories.quiz_repository import QuizRepository
@@ -79,12 +80,18 @@ def get_redis(request: Request):
     return request.app.state.redis
 
 
+# Функцію-залежність для квізів:
 async def get_quiz_service(
         session: AsyncSession = Depends(get_db_postgres),
 ) -> QuizService:
     quiz_repo = QuizRepository(session)
     member_repo = CompanyMemberRepository(session)
-    return QuizService(quiz_repo=quiz_repo, member_repo=member_repo)
+    company_repo = CompanyRepository(session)
+    return QuizService(
+        quiz_repo=quiz_repo,
+        member_repo=member_repo,
+        company_repo=company_repo,
+    )
 
 
 async def get_quiz_result_service(
