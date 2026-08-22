@@ -8,6 +8,7 @@ from app.database.db_postgres import get_db_postgres
 from app.models.user import User
 from app.repositories.analytics_repository import AnalyticsRepository
 from app.repositories.notification_repository import NotificationRepository
+from app.repositories.company_repository import CompanyRepository
 
 from app.repositories.user_repository import UserRepository
 from app.repositories.quiz_repository import QuizRepository
@@ -29,7 +30,6 @@ from app.services.quiz_service import QuizService
 from redis.asyncio import Redis
 
 from app.services.export_service import ExportService
-from app.repositories.company_repository import CompanyRepository
 
 
 
@@ -83,7 +83,7 @@ def get_redis(request: Request):
 
 
 async def get_quiz_service(
-    session: AsyncSession = Depends(get_db_postgres),
+        session: AsyncSession = Depends(get_db_postgres),
 ) -> QuizService:
     return QuizService(
         quiz_repo=QuizRepository(session),
