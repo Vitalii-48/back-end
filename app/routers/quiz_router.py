@@ -145,6 +145,7 @@ async def import_quizzes(
     Доступно тільки для OWNER або ADMIN цієї компанії.
     """
     if file.content_type != ALLOWED_IMPORT_CONTENT_TYPE:
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Файл повинен бути у форматі .xlsx",
