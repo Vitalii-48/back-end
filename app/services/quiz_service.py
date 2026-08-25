@@ -12,7 +12,6 @@ from app.core.logger import setup_logger
 from app.services.notification_service import NotificationService
 from app.services.permissions import ensure_admin, ensure_member
 
-
 logger = setup_logger(__name__)
 
 
@@ -34,15 +33,13 @@ class QuizService:
     async def create_company_quiz(
             self, company_id: UUID, data: QuizCreateRequest, user_id: UUID
     ) -> QuizDetailResponse:
-        # 1. Перевірка прав (вже є)
-        await self._get_company_or_404(company_id=company_id)
-        await self._ensure_admin(user_id=user_id, company_id=company_id)
-        logger.info(f"Створення квізу '{data.title}' для компанії {company_id}")
+        # 1. Компанія існує? (404). Зберігаємо результат — нижче він знадобиться
+        company = await self._get_company_or_404(company_id=company_id)
 
-        # 2. Отримуємо компанію, щоб дізнатися її назву для сповіщення
-        company = await self.company_repo.get_company_by_id(company_id)
-        if not company:
-            raise HTTPException(status_code=404, detail="Company not found")
+        # 2. Перевірка прав (403)
+        await ensure_admin(self.member_repo, user_id=user_id, company_id=company_id)
+
+        logger.info(f"Створення квізу '{data.title}' для компанії {company_id}")
 
         # 3. Створення квізу в базі (вже є)
         quiz = await self.quiz_repo.create_quiz(company_id=company_id, data=data)
@@ -61,10 +58,10 @@ class QuizService:
         return QuizDetailResponse.model_validate(quiz)
 
     async def get_company_quizzes_list(
-        self, company_id: UUID, user_id: UUID, page: int, per_page: int
+            self, company_id: UUID, user_id: UUID, page: int, per_page: int
     ) -> QuizzesListResponse:
         await self._get_company_or_404(company_id=company_id)
-        await self._ensure_member(user_id=user_id, company_id=company_id)
+        await ensure_member(self.member_repo, user_id=user_id, company_id=company_id)
         skip = (page - 1) * per_page
         quizzes, total = await self.quiz_repo.get_company_quizzes(
             company_id=company_id, skip=skip, limit=per_page
@@ -73,10 +70,10 @@ class QuizService:
         return QuizzesListResponse(quizzes=quizzes, total=total, page=page, per_page=per_page)
 
     async def update_company_quiz(
-        self, quiz_id: UUID, company_id: UUID, data: QuizUpdateRequest, user_id: UUID
+            self, quiz_id: UUID, company_id: UUID, data: QuizUpdateRequest, user_id: UUID
     ) -> QuizDetailResponse:
         await self._get_company_or_404(company_id=company_id)
-        await self._ensure_admin(user_id=user_id, company_id=company_id)
+        await ensure_admin(self.member_repo, user_id=user_id, company_id=company_id)
         quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
         logger.info(f"Оновлення квізу {quiz_id} користувачем {user_id}")
         quiz = await self.quiz_repo.update_quiz(quiz=quiz, data=data)
@@ -86,19 +83,18 @@ class QuizService:
             self, quiz_id: UUID, company_id: UUID, user_id: UUID
     ) -> QuizDetailResponse:
         await self._get_company_or_404(company_id=company_id)
-        await self._ensure_member(user_id=user_id, company_id=company_id)
+        await ensure_member(self.member_repo, user_id=user_id, company_id=company_id)
         quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
         return QuizDetailResponse.model_validate(quiz)
 
     async def delete_company_quiz(
-        self, quiz_id: UUID, company_id: UUID, user_id: UUID
+            self, quiz_id: UUID, company_id: UUID, user_id: UUID
     ) -> None:
         await self._get_company_or_404(company_id=company_id)
-        await self._ensure_admin(user_id=user_id, company_id=company_id)
+        await ensure_admin(self.member_repo, user_id=user_id, company_id=company_id)
         quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
         logger.info(f"Видалення квізу {quiz_id} користувачем {user_id}")
         await self.quiz_repo.delete_quiz(quiz)
-
 
     # ── Приватні методи (private methods) ──
 
@@ -111,14 +107,6 @@ class QuizService:
                 detail="Компанію не знайдено.",
             )
         return company
-
-    async def _ensure_admin(self, user_id: UUID, company_id: UUID) -> None:
-        """Кидає 403 якщо юзер не є Owner або Admin компанії"""
-        await ensure_admin(self.member_repo, user_id, company_id)
-
-    async def _ensure_member(self, user_id: UUID, company_id: UUID) -> None:
-        """Кидає 403 якщо user не є учасником компанії."""
-        await ensure_member(self.member_repo, user_id, company_id)
 
     async def _get_quiz_or_404(self, quiz_id: UUID, company_id: UUID):
         """Кидає 404 якщо квіз не знайдено або не належить компанії"""
