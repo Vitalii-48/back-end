@@ -2,7 +2,6 @@
 from uuid import UUID
 from fastapi import HTTPException, status
 
-from app.repositories.company_repository import CompanyRepository
 from app.models import Company
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.quiz_repository import QuizRepository
@@ -34,15 +33,13 @@ class QuizService:
     async def create_company_quiz(
             self, company_id: UUID, data: QuizCreateRequest, user_id: UUID
     ) -> QuizDetailResponse:
-        # 1. Перевірка прав (вже є)
-        await self._get_company_or_404(company_id=company_id)
-        await self._ensure_admin(user_id=user_id, company_id=company_id)
-        logger.info(f"Створення квізу '{data.title}' для компанії {company_id}")
+        # 1. Компанія існує? (404). Зберігаємо результат — нижче він знадобиться
+        company = await self._get_company_or_404(company_id=company_id)
 
-        # 2. Отримуємо компанію, щоб дізнатися її назву для сповіщення
-        company = await self.company_repo.get_company_by_id(company_id)
-        if not company:
-            raise HTTPException(status_code=404, detail="Company not found")
+        # 2. Перевірка прав (403)
+        await self._ensure_admin(user_id=user_id, company_id=company_id)
+
+        logger.info(f"Створення квізу '{data.title}' для компанії {company_id}")
 
         # 3. Створення квізу в базі (вже є)
         quiz = await self.quiz_repo.create_quiz(company_id=company_id, data=data)
@@ -85,6 +82,8 @@ class QuizService:
     async def get_quiz_detail(
             self, quiz_id: UUID, company_id: UUID, user_id: UUID
     ) -> QuizDetailResponse:
+        """Повертає деталі квізу з питаннями та варіантами відповідей."""
+        await self._get_company_or_404(company_id=company_id)
         await self._ensure_member(user_id=user_id, company_id=company_id)
         quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
         return QuizDetailResponse.model_validate(quiz)
@@ -97,15 +96,6 @@ class QuizService:
         quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
         logger.info(f"Видалення квізу {quiz_id} користувачем {user_id}")
         await self.quiz_repo.delete_quiz(quiz)
-
-    async def get_quiz_detail(
-            self, quiz_id: UUID, company_id: UUID, user_id: UUID
-    ) -> QuizDetailResponse:
-        """Повертає деталі квізу з питаннями та варіантами відповідей."""
-        await self._get_company_or_404(company_id=company_id)
-        await self._ensure_member(user_id=user_id, company_id=company_id)
-        quiz = await self._get_quiz_or_404(quiz_id=quiz_id, company_id=company_id)
-        return QuizDetailResponse.model_validate(quiz)
 
     # ── Приватні методи (private methods) ──
 
@@ -149,6 +139,6 @@ class QuizService:
         if not quiz or quiz.company_id != company_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="The quiz was not found or does not belong to this company..",
+                detail="The quiz was not found or does not belong to this company.",
             )
         return quiz
