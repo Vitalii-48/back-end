@@ -40,6 +40,12 @@ class CompanyRepository:
         await self.session.delete(company)
         await self.session.commit()
 
+    async def get_company_by_name(self, name: str) -> Company | None:
+        """Пошук компанії за назвою (для валідації унікальності)"""
+        result = await self.session.execute(
+            select(Company).where(Company.name == name)
+        )
+        return result.scalar_one_or_none()
 
     async def get_company_by_id(self, company_id: UUID) -> Company | None:
         """Пошук компанії за id"""
