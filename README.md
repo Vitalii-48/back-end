@@ -361,6 +361,44 @@ detailed quiz interactions are cached temporarily using Redis.
   enabling pattern matching scans via Redis keys() streams.
 
 
+## Data Export (Task BE #14)
+
+Users can export their own quiz results, and company Owners/Admins can export
+results for their company (all members or a specific one), in either JSON or CSV format.
+Data is read directly from the Redis cache described in Task BE #13.
+
+All endpoints require:
+```http
+Authorization: Bearer <token>
+```
+
+### Export My Own Results
+GET /quiz-results/me/export?export_format=json
+
+Query parameters:
+- `export_format` — `json` (default) or `csv`
+- `company_id` — optional, filter by a specific company
+- `quiz_id` — optional, filter by a specific quiz
+
+Returns only the results of the currently authenticated user.
+
+### Export Company Results
+GET /quiz-results/companies/{company_id}/export?export_format=csv
+
+Query parameters:
+- `export_format` — `json` (default) or `csv`
+- `user_id` — optional, export results of a specific company member (Owner/Admin only)
+- `quiz_id` — optional, filter by a specific quiz
+
+Access: Owner or Admin of the company only. Returns 404 if the company or the
+specified `user_id` (as a member) does not exist, and 403 if the requester
+lacks Owner/Admin permissions.
+
+### CSV Format
+When `export_format=csv`, the response is returned as a downloadable file
+(`Content-Disposition: attachment`) with the following columns:
+
+
 ## Tests
 
 ```bash

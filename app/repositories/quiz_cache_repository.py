@@ -67,3 +67,29 @@ class QuizCacheRepository:
                 results.append(json.loads(raw_str))     # json.loads — str → dict
 
         return results
+
+    async def get_attempts_by_pattern(self, pattern: str) -> list[dict]:
+        """
+        Шукає всі записи (attempts) за готовим Redis pattern (шаблоном).
+        Використовується для гнучкого фільтрування (наприклад, у BE #14 Export),
+        де user_id, company_id чи quiz_id можуть бути "усі" (wildcard, *).
+        """
+        keys = []
+        # scan_iter — безпечніший за keys(), бо не блокує Redis великими базами
+        async for key in self._redis.scan_iter(match=pattern):
+            keys.append(key)
+
+        if not keys:
+            return []
+
+        # mget — пакетне зчитування за один мережевий запит (дуже швидко!)
+        raw_values = await self._redis.mget(keys)
+
+        results = []
+        for raw in raw_values:
+            if raw:
+                # Декодуємо bytes в str перед завантаженням в json для повної безпеки
+                raw_str = raw.decode("utf-8") if isinstance(raw, bytes) else raw
+                results.append(json.loads(raw_str))
+
+        return results
