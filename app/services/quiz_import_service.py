@@ -3,10 +3,11 @@ import asyncio
 import uuid
 from zipfile import BadZipFile
 
-from fastapi import HTTPException,status
+from fastapi import HTTPException, status
 from openpyxl.utils.exceptions import InvalidFileException
 
 from app.repositories.quiz_repository import QuizRepository
+from app.repositories.company_repository import CompanyRepository
 from app.repositories.company_member_repository import CompanyMemberRepository
 from app.services.quiz_validator import QuizValidator
 from app.services.permissions import ensure_admin
@@ -18,19 +19,28 @@ logger = setup_logger(__name__)
 
 
 class QuizImportService:
-    def __init__(self, quiz_repo: QuizRepository, member_repo: CompanyMemberRepository):
+    def __init__(
+        self,
+        quiz_repo: QuizRepository,
+        member_repo: CompanyMemberRepository,
+        company_repo: CompanyRepository,
+    ):
         self.quiz_repo = quiz_repo
         self.member_repo = member_repo
+        self.company_repo = company_repo
 
     async def import_quizzes(
         self, company_id: uuid.UUID, file_content: bytes, user_id: uuid.UUID
     ) -> ImportReport:
-        # 1. Перевірка прав — раніше за все інше
+        # 1. Компанія існує? (404 — завжди перед перевіркою прав)
+        await self._get_company_or_404(company_id=company_id)
+
+        # 2. Перевірка прав (403)
         await ensure_admin(self.member_repo, user_id, company_id)
 
         logger.info(f"Імпорт квізів для компанії {company_id} користувачем {user_id}")
 
-        # 2. Парсинг файлу
+        # 3. Парсинг файлу
         try:
             parsed_quizzes, parse_errors = await asyncio.to_thread(
                 parse_excel_to_quizzes,
@@ -43,7 +53,7 @@ class QuizImportService:
             ) from exc
         report = ImportReport(errors=list(parse_errors))
 
-        # 3. Валідація + 4. Збереження для кожного квіза
+        # 4. Валідація і збереження для кожного квіза
         for quiz_data in parsed_quizzes:
             validation_errors = QuizValidator.validate(quiz_data)
             if validation_errors:
@@ -64,3 +74,15 @@ class QuizImportService:
         await self.quiz_repo.session.commit()
 
         return report
+
+    # ── Приватні методи  ──
+
+    async def _get_company_or_404(self, company_id: uuid.UUID):
+        """Кидає 404 якщо компанія не знайдена. Завжди викликається ПЕРЕД перевіркою прав (403)."""
+        company = await self.company_repo.get_company_by_id(company_id)
+        if not company:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Компанію не знайдено.",
+            )
+        return company

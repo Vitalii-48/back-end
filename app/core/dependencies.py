@@ -155,4 +155,5 @@ async def get_quiz_import_service(
     return QuizImportService(
         quiz_repo=QuizRepository(session),
         member_repo=CompanyMemberRepository(session),
+        company_repo=CompanyRepository(session),
     )

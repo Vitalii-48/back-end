@@ -15,6 +15,8 @@ def make_service():
     svc.quiz_repo = AsyncMock()
     svc.quiz_repo.session = AsyncMock()
     svc.member_repo = AsyncMock()
+    svc.company_repo = AsyncMock()
+    svc.company_repo.get_company_by_id.return_value = AsyncMock()
     return svc
 
 
@@ -34,6 +36,26 @@ def make_valid_quiz_data(title="Python Basics") -> ParsedQuizData:
             ]),
         ],
     )
+
+
+@pytest.mark.asyncio
+async def test_import_rejects_company_not_found(monkeypatch):
+    """
+    Перевіряє порядок '404 перед 403': якщо компанії не існує,
+    має кинутись 404, а не 403 — навіть якщо права взагалі не перевірялись.
+    """
+    svc = make_service()
+    company_id, user_id = uuid.uuid4(), uuid.uuid4()
+
+    svc.company_repo.get_company_by_id.return_value = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        await svc.import_quizzes(company_id, b"fake-bytes", user_id)
+
+    assert exc_info.value.status_code == 404
+    # Перевірка ролі не мала навіть викликатись — компанія "впала" раніше
+    svc.member_repo.get_membership_by_company_and_user.assert_not_called()
+    svc.quiz_repo.create_with_questions.assert_not_called()
 
 
 @pytest.mark.asyncio
