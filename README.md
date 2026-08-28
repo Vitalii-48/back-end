@@ -310,6 +310,40 @@ Example Members/Admins Paginated Response:JSON{
 }
 
 
+
+## Quiz Workflow
+
+All endpoints require:
+```http
+Authorization: Bearer <token>
+```
+
+### Submit Quiz
+POST /companies/{company_id}/quiz-workflow/{quiz_id}/submit
+
+Submit answers for a quiz. User must be a member of the company.
+```json
+{
+  "answers": [
+    {
+      "question_id": "uuid",
+      "selected_option_ids": ["uuid"]
+    }
+  ]
+}
+```
+
+### Get My Average Score in Company
+GET /companies/{company_id}/quiz-workflow/my-average-score
+
+Returns the current user's average score within the specified company.
+
+### Get Member's Average Score
+GET /companies/{company_id}/quiz-workflow/members/{user_id}/average-score
+
+Returns average score of a specific member. Available to Owner/Admin or the user themselves.
+
+
 ## Tests
 
 ```bash

@@ -12,7 +12,7 @@ async def test_create_user_success():
 
     # Mock (заглушка) — замінюємо реальну БД фейковою
     service.repo.get_by_email = AsyncMock(return_value=None)
-    service.repo.create = AsyncMock(return_value=MagicMock(
+    service.repo.create_result = AsyncMock(return_value=MagicMock(
         id=1, username="testuser", email="test@example.com", is_active=True
     ))
 
@@ -20,7 +20,7 @@ async def test_create_user_success():
     user = await service.create_user(data)
 
     assert user.email == "test@example.com"
-    service.repo.create.assert_called_once()
+    service.repo.create_result.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_create_user_duplicate_email():

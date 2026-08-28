@@ -49,7 +49,6 @@ class CompanyMemberService:
     async def remove_member(self, company_id: UUID, member_user_id: UUID, current_user: User) -> None:
         """
         Owner видаляє користувача з компанії.
-        Subtask: 'Allow the Owner to remove users from the company.'
         """
         company = await self.company_repo.get_company_by_id(company_id)
         if not company:
@@ -167,6 +166,15 @@ class CompanyMemberService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company not found"
+            )
+        # 2. Запитувач є членом компанії?
+        requester = await self.member_repo.get_membership_by_company_and_user(
+            company_id, current_user.id
+        )
+        if not requester:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not a member of this company"
             )
 
         # 2. Запитувач є членом компанії?

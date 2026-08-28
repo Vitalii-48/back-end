@@ -1,5 +1,6 @@
 import logging
 from uuid import UUID
+from datetime import datetime, UTC
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -49,3 +50,9 @@ class UserRepository:
     async def delete(self, user: User) -> None:
         await self.session.delete(user)
         await self.session.commit()
+
+    async def update_last_attempt(self, user_id: UUID) -> None:
+        user = await self.get_by_id(user_id)
+        if user:
+            user.last_quiz_attempt = datetime.now(UTC)
+            await self.session.commit()

@@ -6,7 +6,7 @@ from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest, QuizzesListRe
 from app.services.quiz_service import QuizService
 from app.core.dependencies import get_current_user, get_quiz_service
 
-router = APIRouter(prefix="/companies/{company_id}/quizzes", tags=["Quizzes"])
+router = APIRouter(prefix="/companise/{company_id}/quizzes", tags=["Quizzes"])
 
 
 @router.post(

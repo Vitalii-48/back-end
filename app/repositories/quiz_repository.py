@@ -122,3 +122,10 @@ class QuizRepository:
         """Видалити квіз (cascade видалить питання та відповіді автоматично)"""
         await self.session.delete(quiz)
         await self.session.commit()
+
+
+    async def increment_frequency(self, quiz_id: UUID) -> None:
+        quiz = await self.get_quiz_by_id(quiz_id)
+        if quiz:
+            quiz.frequency += 1
+            await self.session.commit()

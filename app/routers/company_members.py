@@ -27,7 +27,7 @@ async def get_company_members(
     return await member_service.get_members(company_id, page, per_page)
 
 
-@router.delete("/{company_id}/members/leave", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{company_id}/members/me", status_code=status.HTTP_204_NO_CONTENT)
 async def leave_company(
     company_id: UUID,
     current_user: User = Depends(get_current_user),
