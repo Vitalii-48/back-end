@@ -26,6 +26,24 @@ class NotificationRepository:
         self.session.add_all(notifications)
         await self.session.commit()
 
+    async def create_many(self, notifications_data: list[dict]) -> None:
+        """
+        Ефективно створює сповіщення з РІЗНИМ текстом для кожного користувача.
+        На відміну від create_bulk (один message для всіх), тут message
+        індивідуальний — наприклад, для нагадувань про конкретний пропущений квіз.
+        Запобігає N+1 запитів у фоновому scheduler-таску.
+        """
+        notifications = [
+            Notification(
+                user_id=item["user_id"],
+                message=item["message"],
+                status=NotificationStatus.UNREAD
+            )
+            for item in notifications_data
+        ]
+        self.session.add_all(notifications)
+        await self.session.commit()
+
     async def get_user_notifications_with_count(
         self, user_id: uuid.UUID, skip: int = 0, limit: int = 10
     ) -> tuple[Sequence[Notification], int]:
@@ -33,7 +51,6 @@ class NotificationRepository:
         Отримує всі сповіщення користувача та їхню загальну кількість
         для валідації через NotificationListResponse.
         """
-        # Запит на самі сповіщення
         stmt = (
             select(Notification)
             .where(Notification.user_id == user_id)
@@ -44,7 +61,6 @@ class NotificationRepository:
         result = await self.session.execute(stmt)
         notifications = result.scalars().all()
 
-        # Запит на кількість
         count_stmt = select(func.count()).where(Notification.user_id == user_id)
         count_result = await self.session.execute(count_stmt)
         total = count_result.scalar_one()

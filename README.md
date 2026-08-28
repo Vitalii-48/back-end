@@ -524,59 +524,47 @@ Response:
 
 ## Notifications (Task BE #16)
 
-Company members are automatically notified whenever a new quiz is created
-in their company. Users can view their own notifications (paginated) and
-mark individual notifications as read.
+Company members are automatically notified when a new quiz is created in
+their company. Users can view their own notifications (paginated) and mark
+them as read.
 
-Recipients are resolved via a lightweight query that returns only member
-`user_id`s (no full `User` objects loaded), and all notifications for a
-company are inserted in a single batch to avoid N+1 queries.
+Recipients are resolved via a lightweight query (only `user_id`s, no full
+`User` objects), and all notifications are inserted in a single batch to
+avoid N+1 queries.
 
 All endpoints require:
 ```http
 Authorization: Bearer <token>
 ```
 
-### Get My Notifications
-GET /notifications/?page=1&per_page=10
+- `GET /notifications/?page=1&per_page=10` — paginated list, most recent first
+- `PATCH /notifications/{notification_id}/read` — mark as read (404 if not found, 403 if not owner)
 
-Returns a paginated list of the current user's notifications, most recent first.
-
-Response:
-```json
-{
-  "notifications": [
-    {
-      "id": "uuid",
-      "message": "New quiz \"Python Basics\" is available in company \"Acme Inc\"",
-      "status": "unread",
-      "created_at": "2026-07-18T18:28:29Z"
-    }
-  ],
-  "total": 1
-}
+### Migration
+```bash
+alembic upgrade head
 ```
 
-### Mark Notification as Read
-PATCH /notifications/{notification_id}/read
 
-Marks a single notification as read. Returns 404 if the notification does
-not exist, and 403 if it belongs to another user.
+## Scheduled Reminders (Task BE #17)
 
-Response:
-```json
-{
-  "id": "uuid",
-  "message": "New quiz \"Python Basics\" is available in company \"Acme Inc\"",
-  "status": "read",
-  "created_at": "2026-07-18T18:28:29Z"
-}
-```
+A background job checks daily whether users have completed all available
+quizzes in their companies within the last 24 hours, and sends a reminder
+notification (via the system from Task BE #16) for each missed quiz.
+
+- **Scheduler**: APScheduler (`AsyncIOScheduler`), chosen over Celery since
+  it needs no separate broker or worker process and integrates directly
+  into the FastAPI `lifespan`.
+- **Schedule**: runs daily at `00:00 UTC`.
+- **Query**: a single LEFT JOIN query finds all users missing a `QuizResult`
+  for an available quiz in the last 24 hours — no per-user queries.
+- **Notifications**: all reminders for a run are inserted in a single
+  batch (`create_many`) to avoid N+1 inserts.
 
 ### Migration
 
-After switching to this branch, apply the new migration to create the
-`notifications` table:
+`QuizResult.completed_at` was changed to a timezone-aware column
+(`TIMESTAMPTZ`) so comparisons with the current UTC time are accurate:
 ```bash
 alembic upgrade head
 ```
