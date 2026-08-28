@@ -70,19 +70,19 @@ def make_quiz(quiz_id, title):
 # ============================================================
 
 class TestSafePercentage:
-    def test_returns_correct_percentage(self):
+    def test_safe_percentage_correct_value(self):
         assert _safe_percentage(9, 10) == 90.0
 
-    def test_returns_zero_when_total_is_zero(self):
+    def test_safe_percentage_zero_total(self):
         assert _safe_percentage(0, 0) == 0.0
 
-    def test_returns_zero_when_correct_is_zero(self):
+    def test_safe_percentage_zero_correct(self):
         assert _safe_percentage(0, 10) == 0.0
 
-    def test_returns_hundred_when_all_correct(self):
+    def test_safe_percentage_hundred_percent(self):
         assert _safe_percentage(10, 10) == 100.0
 
-    def test_rounds_to_two_decimals(self):
+    def test_safe_percentage_rounding(self):
         assert _safe_percentage(1, 3) == 33.33
 
 
@@ -91,7 +91,7 @@ class TestSafePercentage:
 # ============================================================
 
 class TestGetUserRating:
-    async def test_returns_correct_percentage(self, service, analytics_repo_mock):
+    async def test_get_user_rating_success(self, service, analytics_repo_mock):
         user_id = uuid4()
         analytics_repo_mock.get_user_overall_totals.return_value = make_row(
             total_correct=9, total_questions=10
@@ -102,7 +102,7 @@ class TestGetUserRating:
         assert result.overall_average == 90.0
         analytics_repo_mock.get_user_overall_totals.assert_awaited_once_with(user_id)
 
-    async def test_returns_zero_when_no_results(self, service, analytics_repo_mock):
+    async def test_get_user_rating_no_results(self, service, analytics_repo_mock):
         analytics_repo_mock.get_user_overall_totals.return_value = make_row(
             total_correct=0, total_questions=0
         )
@@ -126,7 +126,7 @@ class TestGetUserRating:
 # ============================================================
 
 class TestGetUserQuizAverages:
-    async def test_raises_404_when_quiz_not_found(self, service, quiz_repo_mock):
+    async def test_get_user_quiz_averages_quiz_not_found(self, service, quiz_repo_mock):
         quiz_repo_mock.get_quiz_by_id.return_value = None
 
         with pytest.raises(HTTPException) as exc:
@@ -134,7 +134,7 @@ class TestGetUserQuizAverages:
 
         assert exc.value.status_code == 404
 
-    async def test_does_not_call_analytics_repo_when_quiz_not_found(
+    async def test_get_user_quiz_averages_does_not_call_analytics_repo_when_quiz_not_found(
         self, service, quiz_repo_mock, analytics_repo_mock
     ):
         """Перевіряємо, що при 404 сервіс НЕ робить зайвий SQL-запит."""
@@ -145,7 +145,7 @@ class TestGetUserQuizAverages:
 
         analytics_repo_mock.get_user_quiz_weekly_totals.assert_not_awaited()
 
-    async def test_groups_by_week_correctly(
+    async def test_get_user_quiz_averages_success(
         self, service, quiz_repo_mock, analytics_repo_mock
     ):
         quiz_id = uuid4()
@@ -162,7 +162,7 @@ class TestGetUserQuizAverages:
         assert result.weekly_scores[0].average_score == 80.0
         assert result.weekly_scores[1].average_score == 50.0
 
-    async def test_returns_empty_weekly_scores_when_no_attempts(
+    async def test_get_user_quiz_averages_no_attempts(
         self, service, quiz_repo_mock, analytics_repo_mock
     ):
         quiz_id = uuid4()
@@ -180,14 +180,15 @@ class TestGetUserQuizAverages:
 # ============================================================
 
 class TestGetUserLastAttempts:
-    async def test_returns_empty_list_when_no_attempts(self, service, analytics_repo_mock):
+    async def test_get_user_last_attempts_empty(self, service, analytics_repo_mock, quiz_repo_mock):
         analytics_repo_mock.get_user_last_attempts.return_value = []
 
         result = await service.get_user_last_attempts(uuid4())
 
         assert result == []
+        quiz_repo_mock.get_by_ids.assert_not_awaited()
 
-    async def test_batches_quiz_lookup_into_single_call(
+    async def test_get_user_last_attempts_success_batched(
         self, service, analytics_repo_mock, quiz_repo_mock
     ):
         """Перевіряємо N+1-оптимізацію: get_by_ids викликається ОДИН раз."""
@@ -208,7 +209,7 @@ class TestGetUserLastAttempts:
         assert result[1].quiz_title == "Quiz B"
         quiz_repo_mock.get_by_ids.assert_awaited_once()
 
-    async def test_does_not_call_get_by_ids_when_no_attempts(
+    async def test_get_user_last_attempts_does_not_call_get_by_ids_when_no_attempts(
         self, service, analytics_repo_mock, quiz_repo_mock
     ):
         analytics_repo_mock.get_user_last_attempts.return_value = []
@@ -217,7 +218,7 @@ class TestGetUserLastAttempts:
 
         quiz_repo_mock.get_by_ids.assert_not_awaited()
 
-    async def test_falls_back_to_unknown_title_if_quiz_missing(
+    async def test_get_user_last_attempts_fallback_unknown_quiz(
         self, service, analytics_repo_mock, quiz_repo_mock
     ):
         """Якщо квіз видалили, а результат лишився — назва має бути 'Unknown', без падіння."""
@@ -237,7 +238,7 @@ class TestGetUserLastAttempts:
 # ============================================================
 
 class TestGetCompanyMembersAverages:
-    async def test_raises_404_if_company_not_found(self, service, company_repo_mock):
+    async def test_get_company_members_averages_company_not_found(self, service, company_repo_mock):
         company_repo_mock.get_company_with_members.return_value = None
 
         with pytest.raises(HTTPException) as exc:
@@ -245,7 +246,7 @@ class TestGetCompanyMembersAverages:
 
         assert exc.value.status_code == 404
 
-    async def test_raises_403_for_regular_member(self, service, company_repo_mock):
+    async def test_get_company_members_averages_forbidden_for_regular_member(self, service, company_repo_mock):
         owner_id = uuid4()
         stranger_id = uuid4()
         company = make_company(owner_id, members=[make_member(stranger_id, CompanyRole.MEMBER)])
@@ -256,7 +257,7 @@ class TestGetCompanyMembersAverages:
 
         assert exc.value.status_code == 403
 
-    async def test_allows_owner(self, service, company_repo_mock, analytics_repo_mock):
+    async def test_get_company_members_averages_allowed_for_owner(self, service, company_repo_mock, analytics_repo_mock):
         owner_id = uuid4()
         member_id = uuid4()
         company_repo_mock.get_company_with_members.return_value = make_company(owner_id)
@@ -270,7 +271,7 @@ class TestGetCompanyMembersAverages:
         assert result[0].user_id == member_id
         assert result[0].weekly_scores[0].average_score == 70.0
 
-    async def test_allows_admin(self, service, company_repo_mock, analytics_repo_mock):
+    async def test_get_company_members_averages_allowed_for_admin(self, service, company_repo_mock, analytics_repo_mock):
         owner_id = uuid4()
         admin_id = uuid4()
         company = make_company(owner_id, members=[make_member(admin_id, CompanyRole.ADMIN)])
@@ -281,7 +282,7 @@ class TestGetCompanyMembersAverages:
 
         assert result == []
 
-    async def test_groups_multiple_members_separately(
+    async def test_get_company_members_averages_groups_multiple_members(
         self, service, company_repo_mock, analytics_repo_mock
     ):
         """Перевіряємо, що дані ДВОХ різних учасників не змішуються між собою."""
@@ -306,7 +307,7 @@ class TestGetCompanyMembersAverages:
 # ============================================================
 
 class TestGetMemberQuizAverages:
-    async def test_raises_404_if_company_not_found(self, service, company_repo_mock):
+    async def test_get_member_quiz_averages_company_not_found(self, service, company_repo_mock):
         company_repo_mock.get_company_with_members.return_value = None
 
         with pytest.raises(HTTPException) as exc:
@@ -314,7 +315,7 @@ class TestGetMemberQuizAverages:
 
         assert exc.value.status_code == 404
 
-    async def test_raises_403_for_regular_member(self, service, company_repo_mock):
+    async def test_get_member_quiz_averages_forbidden_for_regular_member(self, service, company_repo_mock):
         owner_id = uuid4()
         stranger_id = uuid4()
         company = make_company(owner_id, members=[make_member(stranger_id, CompanyRole.MEMBER)])
@@ -325,7 +326,7 @@ class TestGetMemberQuizAverages:
 
         assert exc.value.status_code == 403
 
-    async def test_groups_by_quiz_for_target_user(
+    async def test_get_member_quiz_averages_success(
         self, service, company_repo_mock, analytics_repo_mock, quiz_repo_mock
     ):
         owner_id = uuid4()
@@ -343,7 +344,7 @@ class TestGetMemberQuizAverages:
         assert result[0].quiz_title == "SQL Advanced"
         assert result[0].weekly_scores[0].average_score == 60.0
 
-    async def test_returns_empty_list_when_no_attempts(
+    async def test_get_member_quiz_averages_no_attempts(
         self, service, company_repo_mock, analytics_repo_mock
     ):
         owner_id = uuid4()
@@ -354,7 +355,7 @@ class TestGetMemberQuizAverages:
 
         assert result == []
 
-    async def test_batches_quiz_lookup_into_single_call(
+    async def test_get_member_quiz_averages_batched_quiz_lookup(
         self, service, company_repo_mock, analytics_repo_mock, quiz_repo_mock
     ):
         owner_id = uuid4()
@@ -379,7 +380,7 @@ class TestGetMemberQuizAverages:
 # ============================================================
 
 class TestGetCompanyLastAttempts:
-    async def test_raises_404_if_company_not_found(self, service, company_repo_mock):
+    async def test_get_company_last_attempts_company_not_found(self, service, company_repo_mock):
         company_repo_mock.get_company_with_members.return_value = None
 
         with pytest.raises(HTTPException) as exc:
@@ -387,7 +388,7 @@ class TestGetCompanyLastAttempts:
 
         assert exc.value.status_code == 404
 
-    async def test_raises_403_for_regular_member(self, service, company_repo_mock):
+    async def test_get_company_last_attempts_forbidden_for_regular_member(self, service, company_repo_mock):
         owner_id = uuid4()
         stranger_id = uuid4()
         company = make_company(owner_id, members=[make_member(stranger_id, CompanyRole.MEMBER)])
@@ -398,7 +399,7 @@ class TestGetCompanyLastAttempts:
 
         assert exc.value.status_code == 403
 
-    async def test_allows_admin_and_returns_correct_data(
+    async def test_get_company_last_attempts_allowed_for_admin(
         self, service, company_repo_mock, analytics_repo_mock
     ):
         owner_id = uuid4()
@@ -416,7 +417,7 @@ class TestGetCompanyLastAttempts:
         assert result[0].user_id == member_id
         assert result[0].last_completed_at == datetime(2026, 7, 10).date()
 
-    async def test_returns_empty_list_when_no_members_have_attempts(
+    async def test_get_company_last_attempts_empty(
         self, service, company_repo_mock, analytics_repo_mock
     ):
         owner_id = uuid4()
