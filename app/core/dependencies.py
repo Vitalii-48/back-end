@@ -17,6 +17,7 @@ from app.repositories.quiz_cache_repository import QuizCacheRepository
 from app.services.analytics_service import AnalyticsService
 from app.services.auth_service import AuthService
 from app.services.notification_service import NotificationService
+from app.services.quiz_import_service import QuizImportService
 
 from app.services.user_service import UserService
 from app.services.company_service import CompanyService
@@ -146,3 +147,13 @@ async def get_notification_service(
 ) -> NotificationService:
     repository = NotificationRepository(session)
     return NotificationService(repository)
+
+
+async def get_quiz_import_service(
+    session: AsyncSession = Depends(get_db_postgres),
+) -> QuizImportService:
+    return QuizImportService(
+        quiz_repo=QuizRepository(session),
+        member_repo=CompanyMemberRepository(session),
+        company_repo=CompanyRepository(session),
+    )

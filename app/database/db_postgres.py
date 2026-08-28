@@ -4,7 +4,7 @@ from app.core.config import settings
 # Використовуємо async_database_url
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=True,
+    echo=False,
     connect_args={"statement_cache_size": 0}
 )
 

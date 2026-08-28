@@ -1,6 +1,7 @@
 # app/repositories/scheduler_repository.py
-import uuid
 from datetime import datetime, timedelta, UTC
+from uuid import UUID
+
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +16,7 @@ class SchedulerRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_users_who_missed_quizzes(self) -> list[tuple[uuid.UUID, str, str]]:
+    async def get_users_who_missed_quizzes(self) -> list[tuple[UUID, str, str]]:
         """
         Знаходить усіх користувачів, які не проходили доступні квізи за останні 24 години.
         Повертає список кортежів: (user_id, company_name, quiz_title)
@@ -43,7 +44,7 @@ class SchedulerRepository:
             )
             .where(
                 and_(
-                    QuizResult.id == None,          # Ті, хто не мав спроб за 24 години
+                    QuizResult.id.is_(None),          # Ті, хто не мав спроб за 24 години
                     CompanyMember.role != CompanyRole.OWNER
                 )
             )

@@ -1,11 +1,12 @@
 # app/repositories/quiz_repository.py
 from uuid import UUID
 import logging
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.models.quiz import Quiz, QuizQuestion, QuizAnswerOption
 from app.schemas.quiz import QuizCreateRequest, QuizUpdateRequest
+from app.schemas.quiz_import import ParsedQuizData
 
 logger = logging.getLogger(__name__)
 
@@ -124,13 +125,13 @@ class QuizRepository:
         await self.session.delete(quiz)
         await self.session.commit()
 
-
     async def increment_frequency(self, quiz_id: UUID) -> None:
-        quiz = await self.get_quiz_by_id(quiz_id)
-        if quiz:
-            quiz.frequency += 1
-            await self.session.commit()
-
+        await self.session.execute(
+            update(Quiz)
+            .where(Quiz.id == quiz_id)
+            .values(frequency=Quiz.frequency + 1)
+        )
+        await self.session.commit()
 
     async def get_by_ids(self, quiz_ids: list[UUID]) -> list[Quiz]:
         """Дістає одразу декілька квізів по списку ID (один SQL-запит)."""
@@ -140,3 +141,64 @@ class QuizRepository:
         stmt = select(Quiz).where(Quiz.id.in_(quiz_ids))
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_by_title_and_company(
+        self, title: str, company_id: UUID
+    ) -> Quiz | None:
+        """
+        lazy="selectin" вже налаштовано у Quiz.questions і
+        QuizQuestion.options — SQLAlchemy сам підтягне вкладені
+        питання/відповіді без явного selectinload().
+        """
+        stmt = select(Quiz).where(Quiz.title == title, Quiz.company_id == company_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def create_with_questions(
+        self, company_id: UUID, quiz_data: ParsedQuizData
+    ) -> Quiz:
+        quiz = Quiz(
+            title=quiz_data.title,
+            description=quiz_data.description,
+            company_id=company_id,
+        )
+        for question_data in quiz_data.questions:
+            question = QuizQuestion(title=question_data.title)
+            for answer_data in question_data.answers:
+                question.options.append(
+                    QuizAnswerOption(text=answer_data.text, is_correct=answer_data.is_correct)
+                )
+            quiz.questions.append(question)
+
+        self.session.add(quiz)
+        await self.session.flush()
+        return quiz
+
+    async def update_with_questions(
+        self, quiz: Quiz, quiz_data: ParsedQuizData
+    ) -> Quiz:
+        """
+        ВАЖЛИВО: оновлюємо квіз "на місці" (той самий id!), а не
+        видаляємо і створюємо заново — інакше через
+        ondelete="CASCADE" на QuizResult.quiz_id стерлась би вся
+        історія проходжень цього квіза користувачами.
+
+        cascade="all, delete-orphan" на Quiz.questions і
+        QuizQuestion.options означає, що просто очистивши список,
+        SQLAlchemy сам згенерує DELETE для старих рядків при flush.
+        """
+        quiz.title = quiz_data.title
+        quiz.description = quiz_data.description
+
+        quiz.questions.clear()
+
+        for question_data in quiz_data.questions:
+            question = QuizQuestion(title=question_data.title)
+            for answer_data in question_data.answers:
+                question.options.append(
+                    QuizAnswerOption(text=answer_data.text, is_correct=answer_data.is_correct)
+                )
+            quiz.questions.append(question)
+
+        await self.session.flush()
+        return quiz

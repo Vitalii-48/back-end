@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
    # PostgreSQL
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "secret"
+    POSTGRES_PASSWORD: str
     POSTGRES_HOST: str = "postgres"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "mydb"

@@ -5,6 +5,7 @@ email-validator==2.3.0
 fastapi==0.136.3
 uvicorn==0.48.0
 httpx==0.28.1
+openpyxl==3.1.5
 pytest==9.0.3
 pytest-asyncio==1.4.0
 sqlalchemy==2.0.50
@@ -14,5 +15,5 @@ psycopg-binary==3.3.4
 psycopg==3.3.4
 pydantic-settings==2.14.1
 pydantic==2.13.4
+python-multipart==0.0.32
 PyJWT[crypto]==2.13.0
-uliweb-alembic==0.6.9
