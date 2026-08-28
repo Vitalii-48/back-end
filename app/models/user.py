@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import String, Boolean, UUID
 from sqlalchemy.orm import mapped_column, Mapped, relationship
@@ -10,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.company import Company
     from app.models.company_actions import CompanyMember, CompanyRequest
-
+    from app.models.notification import Notification
 
 class User(TimestampMixin, Base):
     __tablename__ = "users"
@@ -33,3 +34,8 @@ class User(TimestampMixin, Base):
     company_requests: Mapped[list["CompanyRequest"]] = relationship(
         "CompanyRequest",
         back_populates="user")
+
+    #  Сповіщення користувача з правильним каскадним видаленням
+    notifications: Mapped[list["Notification"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan")

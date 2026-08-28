@@ -39,19 +39,18 @@ async def create_quiz(
 async def get_quizzes(
     company_id: UUID,
     page: int = Query(default=1, ge=1, description="Номер сторінки"),
-    size: int = Query(default=10, ge=1, le=100, description="Кількість елементів на сторінці"),
+    per_page: int = Query(default=10, ge=1, le=100, description="Кількість елементів на сторінці"),
     current_user: User = Depends(get_current_user),
     quiz_service: QuizService = Depends(get_quiz_service),
 ):
     """
     Повертає пагінований список квізів.
-    Поля квізу не містять вкладених питань (використовується QuizShortResponse).
     """
     return await quiz_service.get_company_quizzes_list(
         company_id=company_id,
         user_id=current_user.id,
         page=page,
-        size=size
+        per_page=per_page
     )
 
 
@@ -69,7 +68,7 @@ async def get_quiz(
 ):
     """
     Повертає повну інформацію про квіз включно з питаннями та варіантами відповідей.
-    Доступно для будь-якого члена (member — учасник) компанії.
+    Доступно для будь-якого члена компанії.
     """
     return await quiz_service.get_quiz_detail(
         quiz_id=quiz_id,
@@ -93,7 +92,6 @@ async def update_quiz(
 ):
     """
     Оновлює текстові поля квізу.
-    Якщо передано масив 'questions' — старі питання повністю видаляються, а замість них записуються нові.
     """
     return await quiz_service.update_company_quiz(
         quiz_id=quiz_id, company_id=company_id, data=data, user_id=current_user.id
@@ -113,7 +111,6 @@ async def delete_quiz(
 ):
     """
     Повністю видаляє квіз з бази даних.
-    Завдяки налаштованим каскадам у БД, також автоматично видаляються всі пов'язані питання та відповіді.
     """
     await quiz_service.delete_company_quiz(
         quiz_id=quiz_id, company_id=company_id, user_id=current_user.id

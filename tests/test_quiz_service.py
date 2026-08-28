@@ -179,7 +179,7 @@ async def test_member_can_get_quizzes_list():
         company_id,
         uuid4(),
         page=1,
-        size=10,
+        per_page=10,
     )
 
     assert result.total == 1
@@ -202,7 +202,7 @@ async def test_non_member_cannot_get_quizzes_list():
             uuid4(),
             uuid4(),
             page=1,
-            size=10,
+            per_page=10,
         )
 
     assert exc.value.status_code == 403

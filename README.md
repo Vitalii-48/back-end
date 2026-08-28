@@ -522,6 +522,66 @@ Response:
 ```
 
 
+## Notifications (Task BE #16)
+
+Company members are automatically notified whenever a new quiz is created
+in their company. Users can view their own notifications (paginated) and
+mark individual notifications as read.
+
+Recipients are resolved via a lightweight query that returns only member
+`user_id`s (no full `User` objects loaded), and all notifications for a
+company are inserted in a single batch to avoid N+1 queries.
+
+All endpoints require:
+```http
+Authorization: Bearer <token>
+```
+
+### Get My Notifications
+GET /notifications/?page=1&per_page=10
+
+Returns a paginated list of the current user's notifications, most recent first.
+
+Response:
+```json
+{
+  "notifications": [
+    {
+      "id": "uuid",
+      "message": "New quiz \"Python Basics\" is available in company \"Acme Inc\"",
+      "status": "unread",
+      "created_at": "2026-07-18T18:28:29Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+### Mark Notification as Read
+PATCH /notifications/{notification_id}/read
+
+Marks a single notification as read. Returns 404 if the notification does
+not exist, and 403 if it belongs to another user.
+
+Response:
+```json
+{
+  "id": "uuid",
+  "message": "New quiz \"Python Basics\" is available in company \"Acme Inc\"",
+  "status": "read",
+  "created_at": "2026-07-18T18:28:29Z"
+}
+```
+
+### Migration
+
+After switching to this branch, apply the new migration to create the
+`notifications` table:
+```bash
+alembic upgrade head
+```
+
+
 ## Tests
 
 ```bash
