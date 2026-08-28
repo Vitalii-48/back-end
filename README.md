@@ -600,14 +600,14 @@ The project is deployed on AWS with two managed databases, in preparation for pr
 ### PostgreSQL — Amazon RDS
 - **Instance:** db.t4g.micro (Free tier)
 - **Engine:** PostgreSQL 18.3
-- **Region:** eu-north-1 (Stockholm)
+- **Region:** eu-west-1 (Ireland)
 - **Public access:** Yes (temporary, for local development)
 - **Security group:** internship-postgres-sg — allows inbound traffic on port 5432 from an allowed IP address
 
 ### Redis — Amazon ElastiCache
 - **Node type:** cache.t4g.micro (Free tier)
 - **Cluster mode:** Disabled (1 shard, 0 replicas)
-- **Region:** eu-north-1 (Stockholm)
+- **Region:** eu-west-1 (Ireland)
 - **Encryption in transit:** Required (TLS)
 - **Security group:** internship-postgres-sg — allows inbound traffic on port 6379
 
@@ -615,3 +615,24 @@ The project is deployed on AWS with two managed databases, in preparation for pr
 
 ### Environment variables
 See `.env.sample` for the full list of required variables (POSTGRES_*, REDIS_*).
+
+
+## Deployment (BE #20)
+
+The application is deployed on **AWS EC2** (Ubuntu 24.04, `t3.micro`, `eu-west-1`),
+alongside RDS PostgreSQL (`db.t4g.micro`) and ElastiCache Redis (`cache.t4g.micro`,
+TLS required), all in the same VPC.
+
+### CI/CD
+
+GitHub Actions (`.github/workflows/deploy.yml`) triggers on push to `develop`.
+Each run:
+1. Temporarily opens SSH (port 22) in the EC2 Security Group for the
+   runner's IP only
+2. Connects via SSH, runs `git pull`, rebuilds the Docker image, and
+   restarts the container
+3. Revokes the SSH rule afterward (`if: always()`), regardless of outcome
+
+### Access
+
+Swagger UI: `http://18.201.205.195:8000/docs`

@@ -3,9 +3,11 @@
 
 # Secret files
 .env
+*.pem
 
 # IDE files
 .idea/
+.vscode/
 
 # Cache files
 __pycache__/
@@ -14,10 +16,9 @@ __pycache__/
 
 # Git history
 .git/
-.gitignore
 
-# Tests
-tests/
+# OS-specific files
+.DS_Store
 
-# Documentation
-README.md
+# Log
+*.log
