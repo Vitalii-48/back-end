@@ -106,6 +106,8 @@ Stop the Containers
 - Users(Get all users, Create a new user, Get user by ID, Update user, Delete user)
 - Companies (Create company, Get all companies with pagination, Get company by ID, Update company, Delete company)
 - Company Actions & Admins** (Invitations, Join Requests, Member & Admin role management)
+- Analytics (User rating, per-quiz weekly averages, last attempts, company-wide member analytics for Owners/Admins)
+
 
 ## Authentication (Авторизація)
 
@@ -397,6 +399,127 @@ lacks Owner/Admin permissions.
 ### CSV Format
 When `export_format=csv`, the response is returned as a downloadable file
 (`Content-Disposition: attachment`) with the following columns:
+
+
+## Analytics (Task BE #15)
+
+Provides performance analytics for quiz results — both for individual users
+(their own overall rating, per-quiz weekly averages, and last attempts) and
+for company Owners/Admins (aggregated stats across all company members).
+
+Averages are calculated as a **weighted average**
+(`SUM(correct_answers) / SUM(total_questions)`), not a simple average of
+per-quiz percentages, so quizzes with more questions are weighted
+proportionally to their size. Weekly breakdowns use PostgreSQL's
+`date_trunc('week', ...)` to group results by calendar week.
+
+All endpoints require:
+```http
+Authorization: Bearer <token>
+```
+
+### My Overall Rating
+GET /analytics/me/rating
+
+Returns the current user's overall average score across all quizzes in all
+companies they belong to.
+
+Response:
+```json
+{
+  "overall_average": 87.5
+}
+```
+
+### My Quiz Averages (Weekly)
+GET /analytics/me/quizzes/{quiz_id}
+
+Returns the current user's average score for a specific quiz, broken down
+by week. Returns 404 if the quiz does not exist.
+
+Response:
+```json
+{
+  "quiz_id": "uuid",
+  "quiz_title": "Python Basics",
+  "weekly_scores": [
+    {"week_start": "2026-06-29", "average_score": 100.0},
+    {"week_start": "2026-07-13", "average_score": 50.0}
+  ]
+}
+```
+
+### My Last Attempts
+GET /analytics/me/last-attempts
+
+Returns a list of quizzes the current user has taken, along with the
+timestamp of their last completion for each.
+
+Response:
+```json
+[
+  {
+    "quiz_id": "uuid",
+    "quiz_title": "Python Basics",
+    "last_completed_at": "2026-07-17"
+  }
+]
+```
+
+### Company Members' Averages (Weekly)
+GET /analytics/companies/{company_id}/members
+
+Access: Owner or Admin of the company only. Returns the weekly average
+scores of every member in the company. Returns 404 if the company does
+not exist, and 403 if the requester is not an Owner/Admin.
+
+Response:
+```json
+[
+  {
+    "user_id": "uuid",
+    "weekly_scores": [
+      {"week_start": "2026-06-29", "average_score": 100.0}
+    ]
+  }
+]
+```
+
+### Company Member's Quiz Averages
+GET /analytics/companies/{company_id}/members/{user_id}
+
+Access: Owner or Admin of the company only. Returns a detailed, per-quiz
+weekly breakdown for a specific company member.
+
+Response:
+```json
+[
+  {
+    "quiz_id": "uuid",
+    "quiz_title": "SQL Advanced",
+    "weekly_scores": [
+      {"week_start": "2026-06-29", "average_score": 60.0}
+    ]
+  }
+]
+```
+
+### Company Members' Last Attempts
+GET /analytics/companies/{company_id}/last-attempts
+
+Access: Owner or Admin of the company only. Returns a list of all company
+members along with the timestamp of their most recent quiz attempt
+(across any quiz in the company).
+
+Response:
+```json
+[
+  {
+    "user_id": "uuid",
+    "last_completed_at": "2026-07-17"
+  }
+]
+```
 
 
 ## Tests

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.company import Company
 from app.schemas.company import CompanyCreateRequest
+from sqlalchemy.orm import selectinload  
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,17 @@ class CompanyRepository:
         """Пошук компанії за id"""
         result = await self.session.execute(
             select(Company).where(Company.id == company_id)
+        )
+        return result.scalar_one_or_none()
+
+
+    async def get_company_with_members(self, company_id: UUID) -> Company | None:
+        """Пошук компанії разом із завантаженим списком учасників (members).
+        Потрібно для перевірки прав owner/admin без додаткового запиту до бази."""
+        result = await self.session.execute(
+            select(Company)
+            .options(selectinload(Company.members))
+            .where(Company.id == company_id)
         )
         return result.scalar_one_or_none()
 
