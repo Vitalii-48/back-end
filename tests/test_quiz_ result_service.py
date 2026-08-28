@@ -5,6 +5,8 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 from app.services.quiz_result_service import QuizWorkflowService
+from app.repositories.quiz_cache_repository import QuizCacheRepository
+
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
@@ -37,6 +39,7 @@ def make_service():
         quiz_result_repo=AsyncMock(),
         member_repo=AsyncMock(),
         user_repo=AsyncMock(),
+        quiz_cache_repo=AsyncMock(spec=QuizCacheRepository),
     )
     return service
 
@@ -148,6 +151,7 @@ async def test_submit_quiz_all_correct():
     service._quiz_result_repo.create_result.assert_called_once()
     service._user_repo.update_last_attempt.assert_called_once()
     service._quiz_repo.increment_frequency.assert_called_once()
+    service._quiz_cache_repo.save_quiz_attempt.assert_called_once()
 
 
 @pytest.mark.asyncio

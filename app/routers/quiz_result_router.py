@@ -47,7 +47,7 @@ async def get_user_average_in_company(
 ):
     """
     Повертає середній бал користувача в межах конкретної компанії.
-    Доступно для owner/admin компанії (Таска BE #10).
+    Доступно для owner/admin компанії.
     """
     return await quiz_result_service.get_user_average_in_company(
         user_id=user_id,

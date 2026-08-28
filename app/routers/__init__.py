@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 from app.routers import health, auth, users, company_router
-from app.routers import company_members, company_requests, quiz_router
+from app.routers import company_members, company_requests, quiz_router, quiz_result_router
 
 # 1. Створюємо головний роутер
 api_router = APIRouter()
@@ -16,6 +16,7 @@ api_router.include_router(company_router.router)
 api_router.include_router(company_members.router)
 api_router.include_router(company_requests.router)
 api_router.include_router(quiz_router.router)
+api_router.include_router(quiz_result_router.router)
 
 
 # 3. Визначаємо публічний інтерфейс модуля

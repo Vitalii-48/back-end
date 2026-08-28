@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import traceback
 
+import redis.asyncio as redis
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,15 +17,23 @@ logger = setup_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Додаток запущено")
+    # Створюємо пул з'єднань (connection pool) при старті
+    pool = redis.ConnectionPool.from_url(
+        settings.REDIS_URL,
+        decode_responses=True,
+    )
+    app.state.redis = redis.Redis(connection_pool=pool)
+    logger.info("Redis підключено")
     yield
+    # Коректно закриваємо (graceful shutdown) при зупинці
+    await app.state.redis.aclose()
+    logger.info("Redis відключено")
     logger.info("Додаток зупинено")
+    
 app = FastAPI(lifespan=lifespan)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    print("=== ПОМИЛКА ===")
-    print(traceback.format_exc())
-    print("===============")
     logger.error(f"Необроблена помилка: {exc}\n{traceback.format_exc()}")
     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
