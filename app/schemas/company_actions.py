@@ -46,3 +46,8 @@ class CompanyRequestResponse(BaseModel):
 class CompanyRequestsListResponse(BaseModel):
     requests: list[CompanyRequestResponse]
     total: int
+    
+
+class CompanyAdminsListResponse(BaseModel):
+    admins: list[CompanyMemberResponse]
+    total: int

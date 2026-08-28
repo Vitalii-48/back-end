@@ -6,8 +6,8 @@ from uuid import UUID
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import CompanyRole
 from app.models.company_actions import CompanyMember
+from app.models.enums import CompanyRole
 
 logger = logging.getLogger(__name__)
 
@@ -62,13 +62,13 @@ class CompanyMemberRepository:
         return result.scalar_one_or_none()
 
     async def get_members_by_company(
-        self, company_id: UUID, skip: int = 0, limit: int = 10
+        self, company_id: UUID, offset: int = 0, limit: int = 10
     ) -> tuple[list[CompanyMember], int]:
         """Список членів компанії з пагінацією (subtask: 'view the list of users in a company')."""
         result = await self.session.execute(
             select(CompanyMember)
             .where(CompanyMember.company_id == company_id)
-            .offset(skip)
+            .offset(offset)
             .limit(limit)
         )
         members = list(result.scalars().all())
@@ -82,3 +82,41 @@ class CompanyMemberRepository:
             f"Fetched {len(members)} members for company={company_id}, total={total}"
         )
         return members, total or 0
+
+
+    async def get_admins_by_company_id(self, company_id: UUID, offset: int = 0, limit: int = 10) -> tuple[list[CompanyMember], int]:
+        """
+        Фільтрує учасників зі статусом ADMIN на рівні бази даних.
+        """
+        query = (
+            select(CompanyMember)
+            .where(
+                CompanyMember.company_id == company_id,
+                CompanyMember.role == CompanyRole.ADMIN
+            )
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self.session.execute(query)
+        admins = list(result.scalars().all())
+        total = await self.session.scalar(
+            select(func.count(CompanyMember.id)).where(
+                CompanyMember.company_id == company_id,
+                CompanyMember.role == CompanyRole.ADMIN,
+            )
+        )
+        logger.debug(f"Fetched {len(admins)} admins, total={total}")
+        return admins, total or 0
+
+
+    async def update_member_role(self, member: CompanyMember, new_role: CompanyRole) -> CompanyMember:
+        """
+        Приймає вже готовий ORM-об'єкт.
+        """
+        member.role = new_role
+
+        # Оскільки об'єкт уже прив'язаний до сесії (ми дістали його раніше),
+        # SQLAlchemy автоматично відстежує зміни (Unit of Work pattern).
+        await self.session.commit()
+        await self.session.refresh(member)
+        return member

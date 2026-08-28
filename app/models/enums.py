@@ -16,3 +16,4 @@ class RequestStatus(str, enum.Enum):
 class CompanyRole(str, enum.Enum):
     OWNER = "OWNER"          # Власник компанії
     MEMBER = "MEMBER"        # Звичайний учасник
+    ADMIN = "ADMIN"          #Адміністратор

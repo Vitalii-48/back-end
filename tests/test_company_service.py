@@ -1,5 +1,6 @@
 # app/tests/test_company_service.py
 import pytest
+from datetime import datetime, UTC
 from uuid import uuid4, UUID
 from unittest.mock import AsyncMock, MagicMock
 from app.services.company_service import CompanyService
@@ -22,12 +23,15 @@ def make_company(company_id: UUID, owner_id: UUID) -> Company:
     company.name = "Test Company"
     company.description = "desc"
     company.is_visible = True
+    company.created_at = datetime.now(UTC)
+    company.updated_at = datetime.now(UTC)
     return company
 
 
 @pytest.fixture
 def service():
     session = AsyncMock()
+    session.add = MagicMock()
     svc = CompanyService(session)
     svc.repo = AsyncMock()
     return svc
@@ -36,19 +40,28 @@ def service():
 @pytest.mark.asyncio
 async def test_create_company(service):
     user_id = uuid4()
+    company_id = uuid4()
     user = make_user(user_id)
-    company = make_company(uuid4(), user_id)
 
-    service.repo.create_company = AsyncMock(return_value=company)
+    # Налаштовуємо session.refresh щоб він заповнював поля компанії.
+    # side_effect (побічний ефект — дія що відбувається при виклику мока)
+    # отримує об'єкт company і заповнює його поля, імітуючи що зробила б реальна БД.
+    async def fake_refresh(obj):
+        obj.id = company_id
+        obj.created_at = datetime.now(UTC)
+        obj.updated_at = datetime.now(UTC)
 
+    service.session.refresh.side_effect = fake_refresh
     data = CompanyCreateRequest(name="Test Company", is_visible=True)
     result = await service.create_company(data, user)
 
-    service.repo.create_company.assert_called_once()
-    assert result.id == company.id
-    assert result.name == company.name
-    assert result.owner_id == company.owner_id
-    assert result.is_visible == company.is_visible
+    service.session.add.assert_called()
+    service.session.commit.assert_called_once()
+    service.session.refresh.assert_called_once()
+
+    assert result.id == company_id
+    assert result.name == data.name
+    assert result.is_visible is True
 
 
 @pytest.mark.asyncio

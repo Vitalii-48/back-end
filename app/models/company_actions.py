@@ -49,8 +49,13 @@ class CompanyMember(TimestampMixin, Base):
         nullable=False,
     )
 
-    company: Mapped["Company"] = relationship(back_populates="members")
-    user: Mapped["User"] = relationship(back_populates="memberships")
+    company: Mapped["Company"] = relationship(
+        "Company",
+        back_populates="members")
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="memberships")
 
 
 class CompanyRequest(TimestampMixin, Base):
@@ -93,5 +98,10 @@ class CompanyRequest(TimestampMixin, Base):
         nullable=False,
     )
 
-    company: Mapped["Company"] = relationship(back_populates="requests")
-    user: Mapped["User"] = relationship(back_populates="company_requests")
+    company: Mapped["Company"] = relationship(
+        "Company",
+        back_populates="requests")
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="company_requests")
