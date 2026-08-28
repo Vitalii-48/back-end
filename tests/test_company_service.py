@@ -39,6 +39,8 @@ async def test_create_company(service):
     user = make_user(user_id)
     company = make_company(uuid4(), user_id)
 
+    service.repo.get_company_by_name = AsyncMock(return_value=None)
+
     service.repo.create_company = AsyncMock(return_value=company)
 
     data = CompanyCreateRequest(name="Test Company", is_visible=True)
