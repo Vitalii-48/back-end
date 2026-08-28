@@ -26,7 +26,7 @@ class QuizQuestionCreate(QuizQuestionBase):
 
     @field_validator("options")
     @classmethod
-    def validate_options(cls, options: list[QuizAnswerOptionCreate]) -> "QuizQuestionCreate":
+    def validate_options(cls, options: list[QuizAnswerOptionCreate]) -> list[QuizAnswerOptionCreate]:
         # Правило 1: Кількість відповідей від 2 до 4
         if not (2 <= len(options) <= 4):
             raise ValueError("Кожне питання повинно мати від 2 до 4 варіантів відповідей.")
