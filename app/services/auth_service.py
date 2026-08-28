@@ -69,13 +69,12 @@ class AuthService:
                 or payload.get(f"{settings.AUTH0_DOMAIN}/email")
         )
 
-        if not email:
-            raise HTTPException(
+        if not isinstance(email, str) or not email:            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email not found in Auth0 token"
             )
         # Шукаємо або створюємо користувача
-        user = await self.user_repo.get_by_email(email)
+        user = await self.user_repo.get_by_email(str(email))
 
         if not user:
             logger.info(f"Creating new user from Auth0: {email}")
