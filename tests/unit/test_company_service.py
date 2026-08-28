@@ -55,6 +55,7 @@ async def test_create_company_success():
     current_user = make_user()
 
     fake_company = make_company(owner_id=current_user.id)
+    svc.repo.get_company_by_name.return_value = None
     svc.repo.create_company.return_value = fake_company
 
     data = CompanyCreateRequest(name="Test Co", description="desc")
@@ -71,6 +72,7 @@ async def test_create_company_rolls_back_on_error():
     svc = make_service()
     current_user = make_user()
 
+    svc.repo.get_company_by_name.return_value = None
     svc.repo.create_company.side_effect = Exception("db error")
 
     data = CompanyCreateRequest(name="Test Co", description="desc")
